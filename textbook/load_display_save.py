@@ -12,4 +12,6 @@ print("width: {} pixels".format(image.shape[1]))
 print("channels: {}".format(image.shape[2]))
 
 cv.imshow("Image", image)
-cv.waitKey()
+cv.waitKey(0)
+
+cv.imwrite("newimage.jpg", image)
