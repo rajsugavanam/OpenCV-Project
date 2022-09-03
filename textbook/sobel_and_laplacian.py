@@ -1,7 +1,6 @@
 import numpy as np
 import argparse
 import cv2 as cv
-import mahotas
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required = True, help = "Path to the image")
