@@ -1,5 +1,10 @@
+import sys
+sys.path.append("../../")
+
 from typing import Callable
-from DataPoint import DataPoint
+from tqdm import tqdm
+
+from opencv_project.math.DataPoint import DataPoint
 
 class DataPointList(object):
 
@@ -29,7 +34,7 @@ class DataPointList(object):
 		`func`: a function with format `func(float) -> None` to run with
 		every data point.
 		"""
-		for x_i in self.data_points:
+		for x_i in tqdm(self.data_points):
 			dp = DataPoint(x_i, self.data_points[x_i])
 			func(dp)
 

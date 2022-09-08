@@ -1,8 +1,13 @@
-import numpy as np
+import sys
 
-from Equation import Equation
-from DataPoint import DataPoint
-from DataPointList import DataPointList
+sys.path.append("../../")
+
+import numpy as np
+from tqdm import tqdm
+
+from opencv_project.math.Equation import Equation
+from opencv_project.math.DataPoint import DataPoint
+from opencv_project.math.DataPointList import DataPointList
 
 class DataPointGenerator(object):
 
@@ -55,6 +60,9 @@ class DataPointGenerator(object):
 		Add a `DataPoint` to the generator's list.
 		"""
 		self.__data_points.addOrChangeDataPoint(data_point)
+
+	def getXRange(self) -> float:
+		return self.__gen_max_x - self.__gen_min_x
 
 	def setGenerationBoundX(self, min_x:float, max_x:float, generate:bool=True) -> None:
 		"""
@@ -115,6 +123,12 @@ class DataPointGenerator(object):
 			self.__gen_min_y:float = y_min
 			self.__gen_max_y:float = y_max
 
+	def hasDataPoints(self) -> bool:
+		"""
+		Returns `true` if there are any stored `DataPoint`s.
+		"""
+		return self.__data_points.size() > 0
+
 	def generateDataPoints(self, override:bool=False) -> None:
 		"""
 		Generates data points for the function contained in the\n
@@ -122,15 +136,17 @@ class DataPointGenerator(object):
 		the data points can be accessed using `DataPointGenerator.getDataPoints()`.
 		`override`: whether to forcibly recalculate ALL `DataPoint`s.
 		"""
+		print("Generating graph points...")
 		# generate y values in the y range for x values in the x range.
 		# the step between x values generated is dx.
 		
 		# we need arange because python decided it didnt like float ranges
-		for x_i in np.arange(self.__gen_min_x, self.__gen_max_x, self.__dx):
+		for x_i in tqdm(np.arange(self.__gen_min_x, self.__gen_max_x, self.__dx)):
 			# if override is on, just generate the point with disregard to existence
 			if (self.__data_points.getPointAtX(x_i) == None) or (override):
 				returned_yval = self.__equation.evaluateEquation(x_i)
 				self.__addDataPoint(DataPoint(x_i, returned_yval))
+		print("Done!")
 
 	def clearDataPoints(self) -> None:
 		"""
