@@ -1,21 +1,27 @@
+from typing import Callable
 import sympy as sp
 from sympy.parsing.mathematica import parse_mathematica
 from sympy.parsing.latex import parse_latex
 from sympy.abc import x
 from ParsingTypes import ParsingTypes
 
-#! TODO ADD COMMENTS
 class EquationInput(object):
 
 	def __init__(self) -> None:
 		self.__parser_type:ParsingTypes = None
 		self.__equation = None
 
-	def getStoredFunction(self):
+	def getStoredFunction(self) -> Callable[[float], float]:
 		"""
-		(`function`) Returns the stored function `f(x)`.
+		Returns: the stored function `f(x)`.
 		"""
 		return self.__equation
+
+	def hasStoredFunction(self):
+		"""
+		Returns: whether there is a stored function, `f(x)`.
+		"""
+		return self.__equation != None
 
 	def getParser(self) -> ParsingTypes:
 		return self.__parser_type
@@ -77,7 +83,7 @@ class EquationInput(object):
 		print("Enter one of the following number keys to select a type.\n")
 
 		print("[1] -- Mathematica/Wolfram Language\n")
-		print("[2] -- LaTeX\n")
+		print("[2] -- LaTeX (requires the antlr4 Python package)\n")
 		print("[exit] -- Cancel")
 
 		while True:

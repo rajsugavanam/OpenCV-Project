@@ -127,7 +127,8 @@ class DataPointGenerator(object):
 		
 		# we need arange because python decided it didnt like float ranges
 		for x_i in np.arange(self.__gen_min_x, self.__gen_max_x, self.__dx):
-			if self.__data_points.getPointAtX(x_i) == None:
+			# if override is on, just generate the point with disregard to existence
+			if (self.__data_points.getPointAtX(x_i) == None) or (override):
 				returned_yval = self.__equation.evaluateEquation(x_i)
 				self.__addDataPoint(DataPoint(x_i, returned_yval))
 
@@ -140,19 +141,23 @@ class DataPointGenerator(object):
 if __name__ == "__main__":
 
 	eq = Equation()
+	# eq.askParser()
 	eq.askParserEquation()
+	# eq.askEquation()
 
 	# tested with Cos[x]. adjusting bounds works correctly :)
-	dpg = DataPointGenerator(eq, x_min=-5, x_max=5, dx=0.001)
-	dpg.generateDataPoints()
-	
-	dpl = dpg.getDataPoints()
+	if (eq.hasStoredFunction()):
 
-	y_list = []
+		dpg = DataPointGenerator(eq, x_min=-5, x_max=5, dx=0.001)
+		dpg.generateDataPoints()
+		
+		dpl = dpg.getDataPoints()
 
-	# dpl.forEach(lambda dp: y_list.append(dp.getY()))
+		y_list = []
 
-	print("Data Points: {}".format(dpg.getDataPoints().size()))
-	print("Clearing data points...")
-	dpg.clearDataPoints()
-	print("Data Points: {}".format(dpg.getDataPoints().size()))
+		# dpl.forEach(lambda dp: y_list.append(dp.getY()))
+
+		print("Data Points: {}".format(dpg.getDataPoints().size()))
+		print("Clearing data points...")
+		dpg.clearDataPoints()
+		print("Data Points: {}".format(dpg.getDataPoints().size()))

@@ -8,9 +8,15 @@ class Equation(object):
 
 	def getStoredFunction(self):
 		"""
-		(`function`) Returns the stored function `f(x)`.
+		Returns: the stored function `f(x)`.
 		"""
 		return self.__eq_input.getStoredFunction()
+
+	def hasStoredFunction(self):
+		"""
+		Returns: whether there is a stored function, `f(x)`.
+		"""
+		return self.__eq_input.hasStoredFunction()
 
 	def askParserEquation(self) -> None:
 		"""
