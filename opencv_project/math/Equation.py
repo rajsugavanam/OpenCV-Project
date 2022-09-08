@@ -1,7 +1,5 @@
-from cmath import cos
-import sympy as sp
+from EquationInput import EquationInput
 
-from opencv_project.math.EquationInput import EquationInput
 
 class Equation(object):
 
@@ -10,7 +8,7 @@ class Equation(object):
 
 	def getStoredFunction(self):
 		"""
-		(`lambda`) Returns the stored function `f(x)`.
+		(`function`) Returns the stored function `f(x)`.
 		"""
 		return self.__eq_input.getStoredFunction()
 

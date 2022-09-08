@@ -1,29 +1,26 @@
-from math import pi
 import sympy as sp
 from sympy.parsing.mathematica import parse_mathematica
 from sympy.parsing.latex import parse_latex
-from sympy.abc import x, y
-import keyboard
-import os
+from sympy.abc import x
 from ParsingTypes import ParsingTypes
 
 #! TODO ADD COMMENTS
 class EquationInput(object):
 
 	def __init__(self) -> None:
-		self.__parser_type = None
+		self.__parser_type:ParsingTypes = None
 		self.__equation = None
 
 	def getStoredFunction(self):
 		"""
-		(`lambda`) Returns the stored function `f(x)`.
+		(`function`) Returns the stored function `f(x)`.
 		"""
 		return self.__equation
 
-	def getParser(self):
+	def getParser(self) -> ParsingTypes:
 		return self.__parser_type
 
-	def evaluateEquation(self, numInput) -> float:
+	def evaluateEquation(self, numInput:float) -> float:
 		if self.__equation == None:
 			print("Failed to evaluate equation: no equation found.")
 			return None
@@ -63,6 +60,10 @@ class EquationInput(object):
 	# Verifies the variables of a function.
 	# Returns: False if there is a variable other than x.
 	def __verifyFunctionVars(self) -> bool:
+		"""
+		Verify that the entered function follows `f(x)`. That is, that it
+		contains no other variables.
+		"""
 		for var in self.__equation.free_symbols:
 			if var != x: # x is from sympy.abc
 				return False
