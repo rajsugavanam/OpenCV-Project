@@ -145,7 +145,10 @@ class DataPointGenerator(object):
 			# if override is on, just generate the point with disregard to existence
 			if (self.__data_points.getPointAtX(x_i) == None) or (override):
 				returned_yval = self.__equation.evaluateEquation(x_i)
-				self.__addDataPoint(DataPoint(x_i, returned_yval))
+
+				if returned_yval != None: # this will happen if the number had an imaginary part
+					self.__addDataPoint(DataPoint(x_i, returned_yval))
+
 		print("Done!")
 
 	def clearDataPoints(self) -> None:
@@ -168,8 +171,6 @@ if __name__ == "__main__":
 		dpg.generateDataPoints()
 		
 		dpl = dpg.getDataPoints()
-
-		y_list = []
 
 		# dpl.forEach(lambda dp: y_list.append(dp.getY()))
 

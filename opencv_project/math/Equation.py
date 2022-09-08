@@ -6,6 +6,7 @@ import sympy as sp
 from sympy.parsing.mathematica import parse_mathematica
 from sympy.parsing.latex import parse_latex
 from sympy.abc import x
+from sympy import im
 from opencv_project.math.ParsingTypes import ParsingTypes
 
 class Equation(object):
@@ -38,7 +39,12 @@ class Equation(object):
 			print("Failed to evaluate equation: no equation found.")
 			return None
 		else:
-			return self.__equation.evalf(6, subs={x:numInput})
+			evaluated = self.__equation.evalf(6, subs={x:numInput})
+			
+			if im(evaluated) != 0:
+				return None
+			else:
+				return evaluated
 
 	def askParserEquation(self) -> None:
 		"""

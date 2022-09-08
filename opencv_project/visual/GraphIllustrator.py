@@ -21,8 +21,8 @@ class GraphIllustrator(object):
 
 		self.__fixCanvasSizes(canvas_size_x, canvas_size_y)
 		
-		self.len_x = self.current_canvas.shape[0]
-		self.len_y = self.current_canvas.shape[1]
+		self.len_x = self.current_canvas.shape[1]
+		self.len_y = self.current_canvas.shape[0]
 		self.pix_per_int = 1
 
 	#TODO Function in need of redesign so that the function actually looks like a function!!!!!!!!
@@ -75,7 +75,9 @@ class GraphIllustrator(object):
 		(center_x, center_y) = self.__getPixCenter()
 		cv.line(self.current_canvas, (0, center_y), (self.len_x, center_y), color, thickness)
 		cv.line(self.current_canvas, (center_x, 0), (center_x, self.len_y), color, thickness)
-		
+
+	def applySmoothing(self):
+		self.current_canvas = cv.blur(self.current_canvas, [2,2])
 
 	def __dpToPixel(self, dp:DataPoint) -> tuple[float,float]:
 		"""
@@ -92,9 +94,9 @@ class GraphIllustrator(object):
 		if (size_x <= 0) or (size_y <= 0):
 			print("Canvas dimensions cannot be equal to or less than zero. \
 				Reverting to default.")
-			self.current_canvas = np.zeros((default_x, default_y, 3), dtype="uint8")
+			self.current_canvas = np.zeros((default_y, default_x, 3), dtype="uint8")
 		else:
-			self.current_canvas = np.zeros((size_x, size_y, 3), dtype="uint8")
+			self.current_canvas = np.zeros((size_y, size_x, 3), dtype="uint8")
 
 	# def __fixPixPerInt(self, pix_per_int:int, default:int=DEFAULT_PIX_PER_INT) -> None:
 	# 	if pix_per_int <= 0:
@@ -110,11 +112,12 @@ if __name__ == "__main__":
 	# eq.askParser()
 	eq.askEquation()
 	# eq.askEquation()
-	
+
 	dpg = DataPointGenerator(eq, x_min=-10, x_max=10, dx=0.001)
 	dpg.generateDataPoints()
 
-	illustrator = GraphIllustrator()
+	illustrator = GraphIllustrator(canvas_size_x=1000, canvas_size_y=800)
 	illustrator.drawAxes()
-	illustrator.plotDataPoints(dpg, color=(255,0,255))
+	illustrator.plotDataPoints(dpg, color=(100,100,100))
+	# illustrator.applySmoothing()
 	illustrator.showGraph()
