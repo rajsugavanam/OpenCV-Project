@@ -214,11 +214,11 @@ if __name__ == "__main__":
 	eq.askEquation()
 	# eq.askEquation()
 
-	dpg = DataPointGenerator(eq, x_min=-10, x_max=10, y_min=-10, y_max=10, dx=0.05)
+	dpg = DataPointGenerator(eq, x_min=-10, x_max=10, y_min=-10, y_max=10, dx=0.025)
 	# dpg = DataPointGenerator(eq, x_min=args["xmin"], x_max=args["xmax"], y_min=args["ymin"], y_max=args["ymax"], dx=0.1)
 	dpg.generateDataPoints()
 
-	illustrator = GraphIllustrator(1000, 800, dpg, color, thickness)
+	illustrator = GraphIllustrator(2560, 1440, dpg, color, thickness)
 	illustrator.drawAxes()
 	illustrator.plotDataPoints()
 	illustrator.applySmoothing()

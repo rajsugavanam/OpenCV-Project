@@ -16,7 +16,6 @@ class Equation(object):
 	def __init__(self, parser_type:ParsingTypes=None) -> None:
 		self.__parser_type:ParsingTypes = parser_type
 		self.__equation = None
-		self.__cont_domain = None
 
 	def getStoredFunction(self) -> Callable[[float], float]:
 		"""
@@ -32,12 +31,6 @@ class Equation(object):
 
 	def getParser(self) -> ParsingTypes:
 		return self.__parser_type
-
-	def getContDomain(self) -> sp.Interval:
-		"""
-		Get the `Interval` for which this function is continuous over.
-		"""
-		return self.__cont_domain
 
 	def evaluateEquation(self, numInput:float) -> float:
 		"""
@@ -80,14 +73,13 @@ class Equation(object):
 				)
 
 				if self.__parser_type == ParsingTypes.MATHEMATICA:
-					self.__equation = simplify(parse_mathematica(inputEq), transformations=T[4])
+					self.__equation = simplify(parse_mathematica(inputEq), transformations=T[4]).doit()
 
 				elif self.__parser_type == ParsingTypes.LATEX:
 					self.__equation = simplify(parse_latex(inputEq), transformations=T[4])
 
 				if self.__verifyFunctionVars():
 					# function is now verified
-					self.__cont_domain = continuous_domain(self.__equation, x, sp.Reals)
 					break
 
 				
