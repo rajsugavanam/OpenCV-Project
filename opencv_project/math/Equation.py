@@ -13,29 +13,33 @@ from opencv_project.math.ParsingTypes import ParsingTypes
 
 class Equation(object):
 
+# ---------------------------------------------------------------------------- #
 	def __init__(self, parser_type:ParsingTypes=None) -> None:
 		self.__parser_type:ParsingTypes = parser_type
 		self.__equation = None
-
+# ---------------------------------------------------------------------------- #
 	def getStoredFunction(self) -> Callable[[float], float]:
 		"""
-		Returns: the stored function `f(x)`.
+		Get the stored function `f(x)`.
 		"""
 		return self.__equation
-
+# ---------------------------------------------------------------------------- #
 	def hasStoredFunction(self):
 		"""
-		Returns: whether there is a stored function, `f(x)`.
+		Whether there is a stored function, `f(x)`.
 		"""
 		return self.__equation != None
-
+# ---------------------------------------------------------------------------- #
 	def getParser(self) -> ParsingTypes:
+		"""
+		Get the type of `ParsingTypes` currently set.
+		"""
 		return self.__parser_type
-
+# ---------------------------------------------------------------------------- #
 	def evaluateEquation(self, numInput:float) -> float:
 		"""
 		Plugs an input for `x` into the stored function `f(x)`.\n
-		Returns: (`float`) the output of the evaluated function.
+		Returns: The output of the evaluated function.
 		"""
 		if self.__equation == None:
 			print("Failed to evaluate equation: no equation found.")
@@ -47,7 +51,7 @@ class Equation(object):
 				return None
 			else:
 				return evaluated
-
+# ---------------------------------------------------------------------------- #
 	def askParserEquation(self) -> None:
 		"""
 		Prompts/reprompts the user for their choice of parser and equation,
@@ -56,7 +60,7 @@ class Equation(object):
 		"""
 		self.askParser()
 		self.askEquation()
-
+# ---------------------------------------------------------------------------- #
 	def askEquation(self) -> None:
 		"""
 		Prompts/reprompts the user ONLY for their equation. Will fail if no parser
@@ -87,27 +91,25 @@ class Equation(object):
 				print(
 					"\nPlease write a function that simplifies to one that only contains the variable x."
 				)
-			
-		
+# ---------------------------------------------------------------------------- #
 	# Verifies the variables of a function.
 	# Returns: False if there is a variable other than x.
 	def __verifyFunctionVars(self) -> bool:
 		"""
-		Verify that the entered function follows `f(x)`. That is, that it
+		Verify that the entered function follows `f(x)`. That is, if it
 		contains no other variables.
-		Returns: (`bool`) `True` if the function's only variable is x.
+		Returns: `True` if the function's only variable is x.
 		"""
 		for var in self.__equation.free_symbols:
 			if var != x: # x is from sympy.abc
 				return False
 		
 		return True
-
+# ---------------------------------------------------------------------------- #
 	def askParser(self) -> None:
 		"""
 		Prompts/reprompts the user ONLY for their equation. Will fail if no parser
 		is already selected.\n
-		See `EquationInput.askParser()` for implementation.
 		"""
 		print("\nBefore you input an equation, you need to select a specific")
 		print("format to use. Which one of the following would you like to use?\n")
@@ -131,6 +133,8 @@ class Equation(object):
 				break
 			else:
 				print("Please enter a valid input.")
+# ---------------------------------------------------------------------------- #
+
 
 if __name__ == "__main__":
 	eqInp = Equation()
