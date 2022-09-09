@@ -3,6 +3,9 @@ import sys
 sys.path.append("../../")
 
 import numpy as np
+import sympy as sp
+from sympy.calculus.util import continuous_domain
+from sympy.abc import x
 from tqdm import tqdm
 
 from opencv_project.math.Equation import Equation
@@ -11,7 +14,9 @@ from opencv_project.math.DataPointList import DataPointList
 
 class DataPointGenerator(object):
 
-	def __init__(self, equation:Equation, x_min:float=-10, x_max:float=10, y_min:float=-10, y_max:float=10, dx:float=0.001) -> None:
+	DEFAULT_DX = 0.1
+
+	def __init__(self, equation:Equation, x_min:float=-10, x_max:float=10, y_min:float=-10, y_max:float=10, dx:float=DEFAULT_DX) -> None:
 		self.__equation:Equation = equation
 		self.__data_points:DataPointList = DataPointList()
 
@@ -19,7 +24,7 @@ class DataPointGenerator(object):
 
 		if dx <= 0:
 			print("The dx value must not be lower than or equal to 0. Reverting to default value.")
-			self.__dx = 0.001
+			self.__dx = 0.1
 		else:
 			self.__dx = dx
 
@@ -63,6 +68,39 @@ class DataPointGenerator(object):
 
 	def getXRange(self) -> float:
 		return self.__gen_max_x - self.__gen_min_x
+
+	def getYRange(self) -> float:
+		return self.__gen_max_y - self.__gen_min_y
+
+	def getMinX(self) -> float:
+		return self.__gen_min_x
+
+	def getMaxX(self) -> float:
+		return self.__gen_max_x
+
+	def getMinY(self) -> float:
+		return self.__gen_min_y
+
+	def getMaxY(self) -> float:
+		return self.__gen_max_y
+
+	def getZeroXOffset(self) -> float:
+		"""
+		Get the `x` value representing the x-offset of the origin to the center.
+		"""
+		# multiply the average by negative to get the dist for the x origin to offset
+		mid_x = -1*(self.__gen_max_x+self.__gen_min_x)/2
+		# mid_x will be the distance to zero
+		return mid_x
+
+	def getZeroYOffset(self) -> float:
+		"""
+		Get the `y` value representing the x-offset of the origin to the center.
+		"""
+		# multiply the average by negative to get the dist for the x origin to offset
+		mid_y = (self.__gen_max_y+self.__gen_min_y)/2
+		# mid_x will be the distance to zero
+		return mid_y
 
 	def setGenerationBoundX(self, min_x:float, max_x:float, generate:bool=True) -> None:
 		"""
@@ -122,6 +160,26 @@ class DataPointGenerator(object):
 			self.__gen_max_x:float = x_max
 			self.__gen_min_y:float = y_min
 			self.__gen_max_y:float = y_max
+
+	def isDiscontinuous(self, x1:float, x2:float) -> bool:
+		"""
+		Check if the stored function `f(x)` is discontinuous over the given interval.
+		from `x1` and `x2`.
+		"""
+		interval = sp.Interval(x1, x2)
+		return self.__doesIntervalIntersectDiscontinuity(interval)
+
+	def __doesIntervalIntersectDiscontinuity(self, input_interval:sp.Interval) -> bool:
+		"""
+		Check if the stored function `f(x)` is discontinuous over the given interval.
+		"""
+		#* handling discontinuities was easily the most hardest part of this but i did it :)
+
+		contDomain = continuous_domain(self.getStoredFunction(), x, input_interval)
+		# if there isn't a continuous domain on the function that matches the two
+		# x values, that means the function was discontinuous over the interval.
+		return contDomain != input_interval
+		# return (input_interval in interval) == False
 
 	def hasDataPoints(self) -> bool:
 		"""

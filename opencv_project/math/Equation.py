@@ -5,8 +5,10 @@ from typing import Callable
 import sympy as sp
 from sympy.parsing.mathematica import parse_mathematica
 from sympy.parsing.latex import parse_latex
+from sympy.parsing.sympy_parser import T
 from sympy.abc import x
-from sympy import im
+from sympy import im, simplify
+from sympy.calculus.util import continuous_domain
 from opencv_project.math.ParsingTypes import ParsingTypes
 
 class Equation(object):
@@ -14,6 +16,7 @@ class Equation(object):
 	def __init__(self, parser_type:ParsingTypes=None) -> None:
 		self.__parser_type:ParsingTypes = parser_type
 		self.__equation = None
+		self.__cont_domain = None
 
 	def getStoredFunction(self) -> Callable[[float], float]:
 		"""
@@ -29,6 +32,12 @@ class Equation(object):
 
 	def getParser(self) -> ParsingTypes:
 		return self.__parser_type
+
+	def getContDomain(self) -> sp.Interval:
+		"""
+		Get the `Interval` for which this function is continuous over.
+		"""
+		return self.__cont_domain
 
 	def evaluateEquation(self, numInput:float) -> float:
 		"""
@@ -71,19 +80,22 @@ class Equation(object):
 				)
 
 				if self.__parser_type == ParsingTypes.MATHEMATICA:
-					self.__equation = parse_mathematica(inputEq)
+					self.__equation = simplify(parse_mathematica(inputEq), transformations=T[4])
 
 				elif self.__parser_type == ParsingTypes.LATEX:
-					self.__equation = parse_latex(inputEq)
+					self.__equation = simplify(parse_latex(inputEq), transformations=T[4])
 
 				if self.__verifyFunctionVars():
+					# function is now verified
+					self.__cont_domain = continuous_domain(self.__equation, x, sp.Reals)
 					break
 
+				
 				# at this point the user will have entered an invalid function
 				print(
-					"\nPlease write a function that only contains the variable x."
+					"\nPlease write a function that simplifies to one that only contains the variable x."
 				)
-
+			
 		
 	# Verifies the variables of a function.
 	# Returns: False if there is a variable other than x.
