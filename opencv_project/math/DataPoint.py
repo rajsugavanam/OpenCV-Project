@@ -28,3 +28,9 @@ class DataPoint(object):
 		"""
 		return self.__y
 # ---------------------------------------------------------------------------- #
+	def slopeWith(self, dp) -> float:
+		"""
+		Gets the slope between this data point and another given one.
+		"""
+		__slope = (dp.getY()-self.getY())/(dp.getX()-self.getX())
+		return __slope

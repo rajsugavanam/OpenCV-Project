@@ -1,4 +1,5 @@
 import sys
+from turtle import numinput
 sys.path.append("../../")
 
 from typing import Callable
@@ -12,7 +13,10 @@ from sympy.calculus.util import continuous_domain
 from opencv_project.math.ParsingTypes import ParsingTypes
 
 class Equation(object):
-
+	"""
+	Interfaces with the user to input an equation and parser.
+	Holds a single function `f(x)` for evaluation.
+	"""
 # ---------------------------------------------------------------------------- #
 	def __init__(self, parser_type:ParsingTypes=None) -> None:
 		self.__parser_type:ParsingTypes = parser_type
@@ -25,7 +29,7 @@ class Equation(object):
 		"""
 		return self.__equation
 # ---------------------------------------------------------------------------- #
-	def hasStoredFunction(self):
+	def hasStoredFunction(self) -> bool:
 		"""
 		Whether there is a stored function, `f(x)`.
 		"""
@@ -46,11 +50,16 @@ class Equation(object):
 			print("Failed to evaluate equation: no equation found.")
 			return None
 		else:
-			evaluated = self.__equation.evalf(6, subs={x:numInput})
+			try:
+				evaluated = self.__equation.subs(x, numInput)
+				real = self.__removeImaginaryComp(evaluated)
+				if (real != None):
+					return real
+			except:
+				# things like factorial might have a pole error
+				pass
 			
-			real = self.__removeImaginaryComp(evaluated)
-			if (real != None):
-				return real
+			return None
 # ---------------------------------------------------------------------------- #
 	def evaluateDerivative(self, numInput:float) -> float:
 		"""
@@ -64,11 +73,15 @@ class Equation(object):
 			)
 			return None
 		else:
-			evaluated = self.__derivative.evalf(6, subs={x:numInput})
-		
-			real = self.__removeImaginaryComp(evaluated)
-			if (real != None):
-				return real
+			try:
+				evaluated = self.__derivative.evalf(6, subs={x:numInput})
+				real = self.__removeImaginaryComp(evaluated)
+				if (real != None):
+					return real
+			except:
+				pass
+			
+			return None
 # ---------------------------------------------------------------------------- #
 	def __removeImaginaryComp(self, complexNum:complex) -> complex:
 		"""
@@ -106,17 +119,14 @@ class Equation(object):
 					.format(self.__parser_type.name)
 				)
 
-				# T[4] allows factorial notation
 				if self.__parser_type == ParsingTypes.MATHEMATICA:
 					self.__equation = sp.simplify(
-						parse_mathematica(inputEq), 
-						transformations=T[4]
+						parse_mathematica(inputEq)
 					)
 
 				elif self.__parser_type == ParsingTypes.LATEX:
 					self.__equation = sp.simplify(
-						parse_latex(inputEq),
-						transformations=T[4]
+						parse_latex(inputEq)
 					)
 
 				self.__equation = self.__equation.doit()

@@ -7,6 +7,9 @@ from tqdm import tqdm
 from opencv_project.math.DataPoint import DataPoint
 
 class DataPointList(object):
+	"""
+	Holds a dictionary of unique data points.
+	"""
 
 # ---------------------------------------------------------------------------- #
 	def __init__(self) -> None:

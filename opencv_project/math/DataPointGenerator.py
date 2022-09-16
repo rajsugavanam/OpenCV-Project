@@ -14,7 +14,7 @@ from sympy.calculus.util import diff
 from sympy.abc import x
 
 from opencv_project.math.Equation import Equation
-from opencv_project.math.FastMath import fast_atan, fast_cos
+from opencv_project.math.FastMath import fast_math
 from opencv_project.math.DataPoint import DataPoint
 from opencv_project.math.DataPointList import DataPointList
 
@@ -23,7 +23,6 @@ class DataPointGenerator(object):
 	Generates data points from a given equation.
 	"""
 
-	DEFAULT_DX = 0.1
 # ---------------------------------------------------------------------------- #
 	def __init__(self, equation:Equation, 
 		x_min:float=-10, x_max:float=10, 
@@ -35,9 +34,9 @@ class DataPointGenerator(object):
 
 		# scale user value by range:
 		# the larger the range, the smaller the dx
-		self.__dx = 0.001*self.getXRange()
-		self.__min_dx = 0.1*self.__dx
-		self.__max_dx = 100*self.__dx
+		self.__default_dx = 0.005*self.getXRange()
+		self.__min_dx = 0.1*self.__default_dx
+		self.__max_dx = 100*self.__default_dx
 		# self.__dx = self.__dx*self.getXRange()/5
 		
 # ---------------------------------------------------------------------------- #
@@ -58,14 +57,14 @@ class DataPointGenerator(object):
 		Set the value for `dx`. this is the delta between x values\n
 		(or the spacing) between the `x` data points.
 		"""
-		self.__dx = dx
+		self.__default_dx = dx
 # ---------------------------------------------------------------------------- #
 	def getDx(self) -> float:
 		"""
 		Get the value for `dx`. this is the delta between x values\n
 		(or the spacing) between the `x` data points.
 		"""
-		return self.__dx
+		return self.__default_dx
 # ---------------------------------------------------------------------------- #
 	def getDataPoints(self) -> DataPointList:
 		"""
@@ -257,7 +256,28 @@ class DataPointGenerator(object):
 		"""
 		Returns `true` if a given y value is in the generator's y range.
 		"""
-		return self.__gen_min_y<=y_value<=self.__gen_max_y
+		if y_value == None:
+			return False
+		else:
+			return self.__gen_min_y<=y_value<=self.__gen_max_y
+# ---------------------------------------------------------------------------- #
+	def __canAddDp(self, current_y:float, forgiveness:float=100) -> bool:
+		"""
+		Determines whether the generator should generate another point in
+		sequence of the last, given their y values.
+		"""
+		if current_y == None:
+			return False
+
+		# if the point isn't too far from the max y
+		__can_add = self.getMinY() - current_y <= forgiveness \
+			or current_y - self.getMaxY() <= forgiveness
+
+		if (__can_add):
+			return True
+		else:
+			return False
+
 # ---------------------------------------------------------------------------- #
 	def generateDataPoints(self, override:bool=False) -> None:
 		"""
@@ -269,12 +289,14 @@ class DataPointGenerator(object):
 		print("Generating graph points...")
 		# generate y values in the y range for x values in the x range.
 		# the step between x values generated is dx.
-		# TODO IMPLEMENT ABOVE
 		
-		# we need arange because python decided it didnt like float ranges
+		# range is the progress bar because it represents the 'index' of points
+		__prog_bar = tqdm(total=self.getXRange())
+		__prog_bar.unit = " Range Index"
+
+		y_prev = None
 		x_i = self.__gen_min_x
-		while (x_i <= self.__gen_max_x):
-		# for x_i in tqdm(np.arange(self.__gen_min_x, self.__gen_max_x, self.__dx)):
+		while (__prog_bar):
 			# change dx based on how steep the derivative is at the given point.
 			# this would make graphs like cot(x)/4 look better.
 			
@@ -283,13 +305,33 @@ class DataPointGenerator(object):
 				returned_yval = self.__equation.evaluateEquation(x_i)
 
 				# `None` will happen if the number had an imaginary part
-				if returned_yval != None and self.__valueInYRange(returned_yval):
-					self.__addDataPoint(DataPoint(x_i, returned_yval))
-			
-			__derivative_value = self.getEquation().evaluateDerivative(x_i)
-			__new_dx = self.__getNewDx(__derivative_value)
-			x_i += __new_dx
+				if returned_yval != None \
+					and (self.__canAddDp(y_prev, returned_yval)):
+						self.__addDataPoint(DataPoint(x_i, returned_yval))
+						# evaluate derivative if it would affect the visible graph
+						__derivative_value = self.getEquation().evaluateDerivative(x_i)
+						__new_dx = self.__getNewDx(__derivative_value)
+				else:
+					y_prev = None
+					# default dx if the graph is outside viewing range
+					# or number doesn't work
+					__new_dx = self.__default_dx
 
+
+			# exit function if generating is done, 
+			# otherwise continue progress bar
+			x_i += __new_dx
+			if (x_i >= self.__gen_max_x):
+				break
+
+			# add the new dx to the progress bar's progess
+			__prog_bar.update(__new_dx)
+			# add the new dx to the actual x_i value too so that it's not just
+			# the visual progress bar that changes
+			y_prev = returned_yval # update previous y for y range check
+
+		
+		__prog_bar.close()
 		print("Done!")
 # ---------------------------------------------------------------------------- #
 	def __getNewDx(self, derivative_value:float) -> float:
@@ -299,30 +341,35 @@ class DataPointGenerator(object):
 		"""
 		if derivative_value != None:
 			# if derivative isn't pi/2 or 3pi/2 etc
-			__theta = sp.atan(derivative_value)
-			# __theta = fast_atan(derivative_value)
+			# __theta = sp.atan(derivative_value)
+			__theta = fast_math.fast_atan(derivative_value)
 			# will be a scale value between 0 and 1
-			__dx_scale = fast_cos(__theta)
-			__scaled_dx = __dx_scale*self.__dx
+			__dx_scale = fast_math.fast_cos(__theta)
+			__scaled_dx = __dx_scale*self.__default_dx
 			__bounded_dx = max(min(__scaled_dx, self.__max_dx), self.__min_dx)
-			return __bounded_dx
+			return np.float32(__bounded_dx)
 		else:
 			# if not differentiable
-			return self.__dx
+			return np.float32(self.__default_dx)
 # ---------------------------------------------------------------------------- #
-	def __checkDerivative(self, dp1, dp2, derivative_forgiveness:float=1):
+	def checkDerivative(self, dp1:DataPoint, dp2:DataPoint,
+		derivative_forgiveness:float=50) -> bool:
 		"""
 		Checks whether `f(x)`'s derivative at `dp1` is close enough to the slope
 		between `dp1` and `dp2`.
 		"""
-		pass
-# ---------------------------------------------------------------------------- #
-	def __checkDerivative(self, x1, x2):
-		"""
-		Checks whether `f(x)`'s derivative at `x1` is close enough to `f(x)`'s 
-		slope between `x1` and `x2`.
-		"""
-		pass
+		__evaluated_deriv = self.getEquation().evaluateDerivative(dp1.getX())
+		__actual_slope = dp1.slopeWith(dp2)
+
+		# absolute value to see the distance between the slopes
+		# if the slope difference isn't above the forgiveness
+		# __evaluated_deriv can sometimes be None if a function isn't
+		# differentiable
+		if __evaluated_deriv != None and \
+			 pow(__actual_slope-__evaluated_deriv, 2) < derivative_forgiveness:
+			return True
+		else:
+			return False
 # ---------------------------------------------------------------------------- #
 	def clearDataPoints(self) -> None:
 		"""
@@ -334,19 +381,15 @@ class DataPointGenerator(object):
 if __name__ == "__main__":
 
 	eq = Equation()
-	# eq.askParser()
-	eq.askParserEquation()
-	# eq.askEquation()
 
-	# tested with Cos[x]. adjusting bounds works correctly :)
+	eq.askParserEquation()
+
 	if (eq.hasStoredFunction()):
 
 		dpg = DataPointGenerator(eq, x_min=-5, x_max=5, dx=0.001)
 		dpg.generateDataPoints()
 		
 		dpl = dpg.getDataPoints()
-
-		# dpl.forEach(lambda dp: y_list.append(dp.getY()))
 
 		print("Data Points: {}".format(dpg.getDataPoints().size()))
 		print("Clearing data points...")
