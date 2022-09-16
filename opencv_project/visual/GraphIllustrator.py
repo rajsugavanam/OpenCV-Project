@@ -84,28 +84,29 @@ class GraphIllustrator(object):
 			self.__last_dp = dp
 			return
 
-		# if ((self.__dpg.isDiscontinuous(self.__last_dp.getX(), dp.getX()) == False)):
-		self.__last_dp = dp # cycle the datapoint
-		# force the pixels within the valid integer range
-		pix_x = max(-2**20, min(pix_x+center_x, 2**20)) # force the numbers to be a reasonable int without overflow
-		pix_y = max(-2**20, min(center_y-pix_y, 2**20)) # we do minus because y starts from the top
+		if (self.__dpg.checkDerivative(self.__last_dp, dp)):
 
-		# transition points to describe a line between the next two points
-		self.__linepos1 = self.__linepos2
-		self.__linepos2 = (pix_x, pix_y)
+			self.__last_dp = dp # cycle the datapoint
+			# force the pixels within the valid integer range
+			pix_x = max(-2**20, min(pix_x+center_x, 2**20)) # force the numbers to be a reasonable int without overflow
+			pix_y = max(-2**20, min(center_y-pix_y, 2**20)) # we do minus because y starts from the top
 
-		# if the pixel x coordinate is in the canvas.
-		# we don't check for y being in the canvas because sometimes the point
-		# we need to lerp to is in the x-range, but not the y-range.
-		if self.__xPixInDrawRange(pix_x):
-			# at this point both this and the previous pixel are in the canvas,
-			# so we can lerp
-			self.__lerp()
+			# transition points to describe a line between the next two points
+			self.__linepos1 = self.__linepos2
+			self.__linepos2 = (pix_x, pix_y)
+
+			# if the pixel x coordinate is in the canvas.
+			# we don't check for y being in the canvas because sometimes the point
+			# we need to lerp to is in the x-range, but not the y-range.
+			if self.__xPixInDrawRange(pix_x):
+				# at this point both this and the previous pixel are in the canvas,
+				# so we can lerp
+				self.__lerp()
 			# self.__setPixel(pix_x, pix_y, thickness, color)
-		# else:
-		# 	self.__last_dp = None
-		# 	self.__linepos1 = None
-		# 	self.__linepos2 = None
+		else:
+			self.__last_dp = None
+			self.__linepos1 = None
+			self.__linepos2 = None
 # ---------------------------------------------------------------------------- #
 	def __xPixInDrawRange(self, pix:int) -> None:
 		"""
@@ -207,7 +208,7 @@ class GraphIllustrator(object):
 				color, thickness)
 
 # ---------------------------------------------------------------------------- #
-	def __getViewingOffsetX(self):
+	def __getViewingOffsetX(self) -> float:
 		"""
 		Gets the difference between the minimum `x` value and its floor.
 		This is essentially how far the viewing plane is shifted to the right
@@ -218,7 +219,7 @@ class GraphIllustrator(object):
 		__x_min_difference = __min_x-__x_before_least
 		return __x_min_difference
 # ---------------------------------------------------------------------------- #
-	def __getViewingOffsetY(self):
+	def __getViewingOffsetY(self) -> float:
 		"""
 		Gets the difference between the maximum `y` value and its floor.
 		This is essentially how far the viewing plane is shifted downwards
@@ -299,17 +300,17 @@ if __name__ == "__main__":
 	color = getArgumentColorOrDefault()
 	thickness = getArgumentThicknessOrDefault()
 
-	eq = Equation(parser_type=ParsingTypes.MATHEMATICA)
+	eq = Equation(parser_type=ParsingTypes.LATEX)
 	# eq.askParser()
 	eq.askEquation()
 	# eq.askEquation()
 
-	dpg = DataPointGenerator(eq, x_min=-5, x_max=5, y_min=-5, y_max=5)
+	dpg = DataPointGenerator(eq, x_min=-5, x_max=5, y_min=-2, y_max=5)
 	# dpg = DataPointGenerator(eq, x_min=args["xmin"], x_max=args["xmax"], y_min=args["ymin"], y_max=args["ymax"], dx=0.1)
 	dpg.generateDataPoints()
 
 	illustrator = GraphIllustrator(2560, 1440, dpg, color, thickness)
 	illustrator.drawAxes()
 	illustrator.plotDataPoints()
-	illustrator.applySmoothing(3)
+	# illustrator.applySmoothing(3)
 	illustrator.showGraph()
