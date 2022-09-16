@@ -1,14 +1,20 @@
 import sys
+from typing import Callable
 
 sys.path.append("../../")
 
 import numpy as np
 import sympy as sp
-from sympy.calculus.util import continuous_domain
-from sympy.abc import x
+
 from tqdm import tqdm
 
+from sympy.calculus.util import continuous_domain
+from sympy.calculus.util import diff
+
+from sympy.abc import x
+
 from opencv_project.math.Equation import Equation
+from opencv_project.math.FastMath import fast_atan, fast_cos
 from opencv_project.math.DataPoint import DataPoint
 from opencv_project.math.DataPointList import DataPointList
 
@@ -21,26 +27,25 @@ class DataPointGenerator(object):
 # ---------------------------------------------------------------------------- #
 	def __init__(self, equation:Equation, 
 		x_min:float=-10, x_max:float=10, 
-		y_min:float=-10, y_max:float=10, dx:float=DEFAULT_DX) -> None:
+		y_min:float=-10, y_max:float=10) -> None:
 		self.__equation:Equation = equation
 		self.__data_points:DataPointList = DataPointList()
 
 		self.__fixEnteredBounds(x_min, x_max, y_min, y_max)
 
-		if dx <= 0:
-			print("The dx value must not be lower than or equal to 0. " + 
-			"Reverting to default value.")
-			self.__dx = 0.1
-		else:
-			self.__dx = dx
+		# scale user value by range:
+		# the larger the range, the smaller the dx
+		self.__dx = 0.001*self.getXRange()
+		# self.__dx = self.__dx*self.getXRange()/5
+		
 # ---------------------------------------------------------------------------- #
-	def getEquation(self) -> None:
+	def getEquation(self) -> Equation:
 		"""
 		(`Equation`) Returns the stored equation.
 		"""
 		return self.__equation
 # ---------------------------------------------------------------------------- #
-	def getStoredFunction(self):
+	def getStoredFunction(self) -> Callable[[float], float]:
 		"""
 		(`function`) Returns the stored function `f(x)`.
 		"""
@@ -53,7 +58,7 @@ class DataPointGenerator(object):
 		"""
 		self.__dx = dx
 # ---------------------------------------------------------------------------- #
-	def getDx(self):
+	def getDx(self) -> float:
 		"""
 		Get the value for `dx`. this is the delta between x values\n
 		(or the spacing) between the `x` data points.
@@ -85,6 +90,13 @@ class DataPointGenerator(object):
 		Returns: The range of the `y` bounds.
 		"""
 		return self.__gen_max_y - self.__gen_min_y
+# ---------------------------------------------------------------------------- #
+	def getXRange(self) -> float:
+		"""
+		Get the `x`-range represented by the bounds.\n
+		Returns: The range of the `x` bounds.
+		"""
+		return self.__gen_max_x - self.__gen_min_x
 # ---------------------------------------------------------------------------- #
 	def getMinX(self) -> float:
 		"""
@@ -173,7 +185,7 @@ class DataPointGenerator(object):
 
 		return (low < current_low) or (current_high > high)
 # ---------------------------------------------------------------------------- #
-	def __boundValid(self, min_val:float, max_val:float):
+	def __boundValid(self, min_val:float, max_val:float) -> bool:
 		return (min_val<max_val)
 # ---------------------------------------------------------------------------- #
 	def __fixEnteredBounds(self, x_min:float, x_max:float, 
@@ -231,6 +243,10 @@ class DataPointGenerator(object):
 		Returns `true` if there are any stored `DataPoint`s.
 		"""
 		return self.__data_points.size() > 0
+
+# ---------------------------------------------------------------------------- #
+	def __valueInYRange(self, y_value:float) -> bool:
+		return self.__gen_min_y<=y_value<=self.__gen_max_y
 # ---------------------------------------------------------------------------- #
 	def generateDataPoints(self, override:bool=False) -> None:
 		"""
@@ -242,17 +258,57 @@ class DataPointGenerator(object):
 		print("Generating graph points...")
 		# generate y values in the y range for x values in the x range.
 		# the step between x values generated is dx.
+		# TODO IMPLEMENT ABOVE
 		
 		# we need arange because python decided it didnt like float ranges
-		for x_i in tqdm(np.arange(self.__gen_min_x, self.__gen_max_x, self.__dx)):
-			# if override is on, just generate the point with disregard to existence
+		x_i = self.__gen_min_x
+		while (x_i <= self.__gen_max_x):
+		# for x_i in tqdm(np.arange(self.__gen_min_x, self.__gen_max_x, self.__dx)):
+			# change dx based on how steep the derivative is at the given point.
+			# this would make graphs like cot(x)/4 look better.
+			
+			# if override is on, just generate the point with disregard to existence			
 			if (self.__data_points.getPointAtX(x_i) == None) or (override):
 				returned_yval = self.__equation.evaluateEquation(x_i)
 
-				if returned_yval != None: # this will happen if the number had an imaginary part
+				# `None` will happen if the number had an imaginary part
+				if returned_yval != None and self.__valueInYRange(returned_yval):
 					self.__addDataPoint(DataPoint(x_i, returned_yval))
+			
+			__derivative_value = self.getEquation().evaluateDerivative(x_i)
+			__new_dx = self.__getNewDx(__derivative_value)
+			x_i += __new_dx
 
 		print("Done!")
+# ---------------------------------------------------------------------------- #
+	def __getNewDx(self, derivative_value:float) -> float:
+		MIN_DX = 0.1*self.__dx
+		MAX_DX = 100*self.__dx
+		if derivative_value != None:
+			# if derivative isn't pi/2 or 3pi/2 etc
+			__theta = sp.atan(derivative_value)
+			# __theta = fast_atan(derivative_value)
+			# will be a scale value between 0 and 1
+			__dx_scale = fast_cos(__theta)
+			__scaled_dx = __dx_scale*self.__dx
+			__bounded_dx = max(min(__scaled_dx, MAX_DX), MIN_DX)
+			return __bounded_dx
+		else:
+			# if not differentiable
+			return self.__dx
+# ---------------------------------------------------------------------------- #
+	def checkDerivative(self, dp1, dp2, derivative_forgiveness:float=1):
+		"""
+		Checks whether `f(x)`'s derivative at `dp1` is close enough to the slope
+		between `dp1` and `dp2`.
+		"""
+		pass
+# ---------------------------------------------------------------------------- #
+	def __checkDerivative(self, x1, x2):
+		"""
+		
+		"""
+		pass
 # ---------------------------------------------------------------------------- #
 	def clearDataPoints(self) -> None:
 		"""
