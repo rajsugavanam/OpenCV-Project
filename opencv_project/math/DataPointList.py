@@ -21,7 +21,8 @@ class DataPointList(object):
 # ---------------------------------------------------------------------------- #
 	def getPointAtX(self, x:float) -> DataPoint:
 		"""
-		Get the `DataPoint` of `f(x)` located at `x=<float>`.\n
+		Get the `DataPoint` of `f(x)` located at `x=<float>`, depending on
+		its existence.\n
 		`x`: The x value to look for a `DataPoint` at.\n
 		Returns: the corresponding `DataPoint` if there is an x value that is contained in one;
 		else, `None`.

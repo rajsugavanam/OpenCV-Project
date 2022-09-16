@@ -36,6 +36,8 @@ class DataPointGenerator(object):
 		# scale user value by range:
 		# the larger the range, the smaller the dx
 		self.__dx = 0.001*self.getXRange()
+		self.__min_dx = 0.1*self.__dx
+		self.__max_dx = 100*self.__dx
 		# self.__dx = self.__dx*self.getXRange()/5
 		
 # ---------------------------------------------------------------------------- #
@@ -182,10 +184,16 @@ class DataPointGenerator(object):
 # ---------------------------------------------------------------------------- #
 	def __boundExpanded(self, low:float, current_low:float, 
 		current_high:float, high:float) -> bool:
-
+		"""
+		Returns `true` if an interval change resulted in new x values being
+		included.
+		"""
 		return (low < current_low) or (current_high > high)
 # ---------------------------------------------------------------------------- #
 	def __boundValid(self, min_val:float, max_val:float) -> bool:
+		"""
+		Returns `true` if the desired min bound is lower than the max bound.
+		"""
 		return (min_val<max_val)
 # ---------------------------------------------------------------------------- #
 	def __fixEnteredBounds(self, x_min:float, x_max:float, 
@@ -246,6 +254,9 @@ class DataPointGenerator(object):
 
 # ---------------------------------------------------------------------------- #
 	def __valueInYRange(self, y_value:float) -> bool:
+		"""
+		Returns `true` if a given y value is in the generator's y range.
+		"""
 		return self.__gen_min_y<=y_value<=self.__gen_max_y
 # ---------------------------------------------------------------------------- #
 	def generateDataPoints(self, override:bool=False) -> None:
@@ -282,8 +293,10 @@ class DataPointGenerator(object):
 		print("Done!")
 # ---------------------------------------------------------------------------- #
 	def __getNewDx(self, derivative_value:float) -> float:
-		MIN_DX = 0.1*self.__dx
-		MAX_DX = 100*self.__dx
+		"""
+		Dynamically gets a new `dx` value based on an input representing the slope
+		of a tangent line. Higher slopes return smaller values.
+		"""
 		if derivative_value != None:
 			# if derivative isn't pi/2 or 3pi/2 etc
 			__theta = sp.atan(derivative_value)
@@ -291,13 +304,13 @@ class DataPointGenerator(object):
 			# will be a scale value between 0 and 1
 			__dx_scale = fast_cos(__theta)
 			__scaled_dx = __dx_scale*self.__dx
-			__bounded_dx = max(min(__scaled_dx, MAX_DX), MIN_DX)
+			__bounded_dx = max(min(__scaled_dx, self.__max_dx), self.__min_dx)
 			return __bounded_dx
 		else:
 			# if not differentiable
 			return self.__dx
 # ---------------------------------------------------------------------------- #
-	def checkDerivative(self, dp1, dp2, derivative_forgiveness:float=1):
+	def __checkDerivative(self, dp1, dp2, derivative_forgiveness:float=1):
 		"""
 		Checks whether `f(x)`'s derivative at `dp1` is close enough to the slope
 		between `dp1` and `dp2`.
@@ -306,7 +319,8 @@ class DataPointGenerator(object):
 # ---------------------------------------------------------------------------- #
 	def __checkDerivative(self, x1, x2):
 		"""
-		
+		Checks whether `f(x)`'s derivative at `x1` is close enough to `f(x)`'s 
+		slope between `x1` and `x2`.
 		"""
 		pass
 # ---------------------------------------------------------------------------- #
