@@ -7,7 +7,7 @@ from sympy.parsing.mathematica import parse_mathematica
 from sympy.parsing.latex import parse_latex
 from sympy.parsing.sympy_parser import T
 from sympy.abc import x
-from sympy import im, simplify
+from sympy import im
 from sympy.calculus.util import continuous_domain
 from opencv_project.math.ParsingTypes import ParsingTypes
 
@@ -17,6 +17,7 @@ class Equation(object):
 	def __init__(self, parser_type:ParsingTypes=None) -> None:
 		self.__parser_type:ParsingTypes = parser_type
 		self.__equation = None
+		self.__derivative = None
 # ---------------------------------------------------------------------------- #
 	def getStoredFunction(self) -> Callable[[float], float]:
 		"""
@@ -47,10 +48,39 @@ class Equation(object):
 		else:
 			evaluated = self.__equation.evalf(6, subs={x:numInput})
 			
-			if im(evaluated) != 0:
-				return None
-			else:
-				return evaluated
+			real = self.__removeImaginaryComp(evaluated)
+			if (real != None):
+				return real
+# ---------------------------------------------------------------------------- #
+	def evaluateDerivative(self, numInput:float) -> float:
+		"""
+		Plugs an input for `x` into the stored derivative of `f(x)`.\n
+		Returns: The output of the evaluated derivative.
+		"""
+		if (self.__equation == None) or (self.__derivative == None):
+			print(
+				"Failed to evaluate derivative: no parent equation " +
+				"or derivative found."
+			)
+			return None
+		else:
+			evaluated = self.__derivative.evalf(6, subs={x:numInput})
+		
+			real = self.__removeImaginaryComp(evaluated)
+			if (real != None):
+				return real
+# ---------------------------------------------------------------------------- #
+	def __removeImaginaryComp(self, complexNum:complex) -> complex:
+		"""
+		Returns none if the number is imaginary, but itself if there is no
+		imaginary component.
+		`complexNum`: the number to remove the imaginary part of.
+		"""
+		# if the output is imaginary, discard it
+		if im(complexNum) != 0:
+			return None
+		else:
+			return complexNum
 # ---------------------------------------------------------------------------- #
 	def askParserEquation(self) -> None:
 		"""
@@ -76,17 +106,30 @@ class Equation(object):
 					.format(self.__parser_type.name)
 				)
 
+				# T[4] allows factorial notation
 				if self.__parser_type == ParsingTypes.MATHEMATICA:
-					self.__equation = simplify(parse_mathematica(inputEq), transformations=T[4]).doit()
+					self.__equation = sp.simplify(
+						parse_mathematica(inputEq), 
+						transformations=T[4]
+					)
 
 				elif self.__parser_type == ParsingTypes.LATEX:
-					self.__equation = simplify(parse_latex(inputEq), transformations=T[4])
+					self.__equation = sp.simplify(
+						parse_latex(inputEq),
+						transformations=T[4]
+					)
+
+				self.__equation = self.__equation.doit()
+				print("Parsed Equation:", self.__equation)
+				# only allowed variable will be `x`, so that's the variable
+				# the derivative is respect to
+				self.__derivative = sp.diff(self.__equation, x, evaluate=True)
+
 
 				if self.__verifyFunctionVars():
 					# function is now verified
 					break
 
-				
 				# at this point the user will have entered an invalid function
 				print(
 					"\nPlease write a function that simplifies to one that only contains the variable x."
