@@ -62,7 +62,7 @@ class GraphIllustrator(object):
 			print("Failed to draw graph: No data points were found.")
 		print("Done!")
 # ---------------------------------------------------------------------------- #
-	def showGraph(self):
+	def showGraph(self) -> None:
 		"""
 		Open a window on your computer showing the canvas. Press any key to close it.
 		"""
@@ -84,28 +84,28 @@ class GraphIllustrator(object):
 			self.__last_dp = dp
 			return
 
-		if ((self.__dpg.isDiscontinuous(self.__last_dp.getX(), dp.getX()) == False)):
-			self.__last_dp = dp # cycle the datapoint
-			# force the pixels within the valid integer range
-			pix_x= max(-2**20, min(pix_x+center_x, 2**20)) # force the numbers to be a reasonable int without overflow
-			pix_y= max(-2**20, min(center_y-pix_y, 2**20)) # we do minus because y starts from the top
+		# if ((self.__dpg.isDiscontinuous(self.__last_dp.getX(), dp.getX()) == False)):
+		self.__last_dp = dp # cycle the datapoint
+		# force the pixels within the valid integer range
+		pix_x = max(-2**20, min(pix_x+center_x, 2**20)) # force the numbers to be a reasonable int without overflow
+		pix_y = max(-2**20, min(center_y-pix_y, 2**20)) # we do minus because y starts from the top
 
-			# transition points to describe a line between the next two points
-			self.__linepos1 = self.__linepos2
-			self.__linepos2 = (pix_x, pix_y)
+		# transition points to describe a line between the next two points
+		self.__linepos1 = self.__linepos2
+		self.__linepos2 = (pix_x, pix_y)
 
-			# if the pixel x coordinate is in the canvas.
-			# we don't check for y being in the canvas because sometimes the point
-			# we need to lerp to is in the x-range, but not the y-range.
-			if self.__xPixInDrawRange(pix_x):
-				# at this point both this and the previous pixel are in the canvas,
-				# so we can lerp
-				self.__lerp()
-				# self.__setPixel(pix_x, pix_y, thickness, color)
-		else:
-			self.__last_dp = None
-			self.__linepos1 = None
-			self.__linepos2 = None
+		# if the pixel x coordinate is in the canvas.
+		# we don't check for y being in the canvas because sometimes the point
+		# we need to lerp to is in the x-range, but not the y-range.
+		if self.__xPixInDrawRange(pix_x):
+			# at this point both this and the previous pixel are in the canvas,
+			# so we can lerp
+			self.__lerp()
+			# self.__setPixel(pix_x, pix_y, thickness, color)
+		# else:
+		# 	self.__last_dp = None
+		# 	self.__linepos1 = None
+		# 	self.__linepos2 = None
 # ---------------------------------------------------------------------------- #
 	def __xPixInDrawRange(self, pix:int) -> None:
 		"""
@@ -163,10 +163,71 @@ class GraphIllustrator(object):
 
 		(center_x, center_y) = self.__getPixOrigin()
 
+		# draw x axis
 		cv.line(self.current_canvas, (0, center_y), (self.__len_x, center_y), 
 			color, thickness)
+		# draw y axis
 		cv.line(self.current_canvas, (center_x, 0), (center_x, self.__len_y), 
 			color, thickness)
+
+		# save the ranges so they don't have to be recalculated
+		__x_range = self.__dpg.getXRange()
+		__y_range = self.__dpg.getYRange()
+		
+		# the portion of the screen that has a tick. if x goes from
+		# -2 to 2, the range is 4 and the x multiplier will be 2/4 = 1/2
+		# of the screen. (the tick will span -1 to 1).
+		__tick_len_mult = 1/__x_range
+		__tick_height_mult = 1/__y_range
+
+		# easy constant to scale the height
+		TICK_SPAN = 20
+
+		# actual tick height and length in pixels
+		__tick_len = int(self.__len_x*__tick_len_mult)
+		__tick_height = int(self.__len_y*__tick_height_mult)
+
+		# draw x ticks
+		# ceiling is used because if you have 0.5 as the max, the closest
+		# max integer that includes it is its ceiling
+		for x_i in np.arange(self.__getViewingOffsetX(), sp.ceiling(__x_range)):
+			__horizontal_position = int(x_i*__tick_len)
+			cv.line(
+				self.current_canvas,
+				(__horizontal_position, center_y-TICK_SPAN),
+				(__horizontal_position, center_y+TICK_SPAN),
+				color, thickness)
+
+		# draw y ticks
+		for y_i in range(self.__getViewingOffsetY(), sp.ceiling(__y_range)):
+			cv.line(
+				self.current_canvas,
+				(center_x-TICK_SPAN, y_i*__tick_height),
+				(center_x+TICK_SPAN, y_i*__tick_height),
+				color, thickness)
+
+# ---------------------------------------------------------------------------- #
+	def __getViewingOffsetX(self):
+		"""
+		Gets the difference between the minimum `x` value and its floor.
+		This is essentially how far the viewing plane is shifted to the right
+		from the left-most closest integer.
+		"""
+		__min_x = self.__dpg.getMinX()
+		__x_before_least = sp.floor(__min_x)
+		__x_min_difference = __min_x-__x_before_least
+		return __x_min_difference
+# ---------------------------------------------------------------------------- #
+	def __getViewingOffsetY(self):
+		"""
+		Gets the difference between the maximum `y` value and its floor.
+		This is essentially how far the viewing plane is shifted downwards
+		from the top-most closest integer.
+		"""
+		__max_y = self.__dpg.getMaxY()
+		__y_after_most = sp.ceiling(__max_y)
+		__y_min_difference = __y_after_most-__max_y
+		return __y_min_difference
 # ---------------------------------------------------------------------------- #
 	def applySmoothing(self, magnitude:int) -> None:
 		"""
@@ -243,12 +304,12 @@ if __name__ == "__main__":
 	eq.askEquation()
 	# eq.askEquation()
 
-	dpg = DataPointGenerator(eq, x_min=-10, x_max=10, y_min=-10, y_max=10, dx=0.025)
+	dpg = DataPointGenerator(eq, x_min=-5, x_max=5, y_min=-5, y_max=5)
 	# dpg = DataPointGenerator(eq, x_min=args["xmin"], x_max=args["xmax"], y_min=args["ymin"], y_max=args["ymax"], dx=0.1)
 	dpg.generateDataPoints()
 
 	illustrator = GraphIllustrator(2560, 1440, dpg, color, thickness)
 	illustrator.drawAxes()
 	illustrator.plotDataPoints()
-	illustrator.applySmoothing()
+	illustrator.applySmoothing(3)
 	illustrator.showGraph()
