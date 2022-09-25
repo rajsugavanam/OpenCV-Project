@@ -38,7 +38,19 @@ class DataPointGenerator(object):
 		self.__min_dx = 0.1*self.__default_dx
 		self.__max_dx = 100*self.__default_dx
 		# self.__dx = self.__dx*self.getXRange()/5
-		
+# ---------------------------------------------------------------------------- #
+	def cloneToNewDpg(self, equation:Equation) -> "DataPointGenerator":
+		"""
+		Clones this `DataPointGenerator` with a new given equation.
+		"""
+		dpg = DataPointGenerator(
+			equation,
+			self.getMinX(),
+			self.getMaxX(),
+			self.getMinY(),
+			self.getMaxY()
+		)
+		return dpg
 # ---------------------------------------------------------------------------- #
 	def getEquation(self) -> Equation:
 		"""
@@ -261,7 +273,7 @@ class DataPointGenerator(object):
 		else:
 			return self.__gen_min_y<=y_value<=self.__gen_max_y
 # ---------------------------------------------------------------------------- #
-	def __canAddDp(self, current_y:float, forgiveness:float=100) -> bool:
+	def __canAddDp(self, current_y:float, forgiveness:float=500) -> bool:
 		"""
 		Determines whether the generator should generate another point in
 		sequence of the last, given their y values.
@@ -306,7 +318,7 @@ class DataPointGenerator(object):
 
 				# `None` will happen if the number had an imaginary part
 				if returned_yval != None \
-					and (self.__canAddDp(y_prev, returned_yval)):
+					and (self.__canAddDp(returned_yval)):
 						self.__addDataPoint(DataPoint(x_i, returned_yval))
 						# evaluate derivative if it would affect the visible graph
 						__derivative_value = self.getEquation().evaluateDerivative(x_i)
@@ -353,7 +365,7 @@ class DataPointGenerator(object):
 			return np.float32(self.__default_dx)
 # ---------------------------------------------------------------------------- #
 	def checkDerivative(self, dp1:DataPoint, dp2:DataPoint,
-		derivative_forgiveness:float=50) -> bool:
+		derivative_forgiveness:float=100) -> bool:
 		"""
 		Checks whether `f(x)`'s derivative at `dp1` is close enough to the slope
 		between `dp1` and `dp2`.

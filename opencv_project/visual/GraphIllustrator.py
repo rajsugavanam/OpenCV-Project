@@ -1,4 +1,6 @@
+from os import system
 import sys
+
 sys.path.append("../../")
 
 import cv2 as cv
@@ -9,9 +11,14 @@ from opencv_project.math.ParsingTypes import ParsingTypes
 from opencv_project.math.Equation import Equation
 from opencv_project.math.DataPoint import DataPoint
 from opencv_project.math.DataPointGenerator import DataPointGenerator
+from opencv_project.visual.GraphImage import GraphImage
 
 import argparse
+from tqdm import tqdm
+from array import array
+
 import matplotlib
+from matplotlib import pyplot as plt
 
 
 class GraphIllustrator(object):
@@ -19,10 +26,10 @@ class GraphIllustrator(object):
 	Uses the data from a `DataPointGenerator` to visually draw out its function.
 	"""
 
-	DEFAULT_CANVAS_SIZE_X:int = 500
-	DEFAULT_CANVAS_SIZE_Y:int = 500
-	DEFAULT_THICKNESS:int = 2
-	DEFAULT_COLOR:tuple = (0,255,0)
+	__DEFAULT_CANVAS_SIZE_X:int = 500
+	__DEFAULT_CANVAS_SIZE_Y:int = 500
+	__DEFAULT_THICKNESS:int = 2
+	__DEFAULT_COLOR:tuple = (0,255,0)
 # ---------------------------------------------------------------------------- #
 	def __init__(self, canvas_size_x:int, canvas_size_y:int, dpg:DataPointGenerator, 
 		color:tuple[float, float, float], thickness:int) -> None:
@@ -45,11 +52,100 @@ class GraphIllustrator(object):
 		self.__pix_per_x:int = int(self.__len_x/self.__dpg.getXRange())
 		self.__pix_per_y:int = int(self.__len_y/self.__dpg.getYRange())
 # ---------------------------------------------------------------------------- #
-	def plotDataPoints(self) -> None:
+	def maskedWithEquation(self, equation:Equation) -> array:
+		"""
+		Masks/intersects this graph's equation with another equation, returning
+		it as a new image.
+		"""
+		#! [TEXTBOOK] Masking
+		eq_masker = self.__equationMasker(equation)
+
+		print("Preparing mask equation...")
+		eq_masker.__getDataPointGenerator().generateDataPoints()
+		eq_masker.drawGraph()
+
+		# masks can only be 1 channel, so make the mask image grayscale
+		grayscale_mask = \
+			cv.cvtColor(eq_masker.getGraphImage(), cv.COLOR_BGR2GRAY)
+
+		# mask the current graph with the new mask graph
+		masked = cv.bitwise_and(
+			self.current_canvas,
+			self.current_canvas,
+			mask=grayscale_mask
+		)
+
+		return masked
+# ---------------------------------------------------------------------------- #
+	def __equationMasker(self, equation:Equation) -> "GraphIllustrator":
+		"""
+		Clones this `GraphIllustrator` instance with a different equation,
+		primed with a white color. Its graph image can serve as a mask.
+		"""
+		new_dpg = self.__getDataPointGenerator().cloneToNewDpg(equation)
+		gi = GraphIllustrator(
+			self.getSizeX(),
+			self.getSizeY(),
+			new_dpg,
+			(255,255,255),
+			self.getThickness()
+		)
+
+		return gi
+# ---------------------------------------------------------------------------- #
+	def __getDataPointGenerator(self) -> DataPointGenerator:
+		"""
+		Gets the `DataPointGenerator` stored in this illustrator.
+		"""
+		return self.__dpg
+# ---------------------------------------------------------------------------- #
+	def getGraphImage(self) -> array:
+		"""
+		Gets the canvas object of the graph.
+		"""
+		return self.current_canvas
+# ---------------------------------------------------------------------------- #
+	def getSizeX(self) -> float:
+		"""
+		Gets the pixel width of the graph image.
+		"""
+		return self.__len_x
+# ---------------------------------------------------------------------------- #
+	def getSizeY(self) -> float:
+		"""
+		Gets the pixel height of the graph image.
+		"""
+		return self.__len_y
+# ---------------------------------------------------------------------------- #
+	def getColor(self) -> float:
+		"""
+		Gets the color of the function curve.
+		"""
+		return self.__graph_color
+# ---------------------------------------------------------------------------- #
+	def setColor(self, color:tuple[float,float,float]) -> float:
+		"""
+		Sets the color of the function curve.
+		"""
+		self.__graph_color = color
+# ---------------------------------------------------------------------------- #
+	def getThickness(self) -> float:
+		"""
+		Gets the thickness of the function curve.
+		"""
+		return self.__graph_thickness
+# ---------------------------------------------------------------------------- #
+	def setThickness(self, thickness:float) -> float:
+		"""
+		Sets the thickness of the function curve.
+		"""
+		self.__graph_thickness = thickness
+# ---------------------------------------------------------------------------- #
+	def drawGraph(self) -> None:
 		"""
 		Draws an illustration of the given data point list.
 		"""
-		print("Plotting graph points...")
+		print("Drawing graph...")
 		dpl = self.__dpg.getDataPoints()
 
 		num_data_points = dpl.size()
@@ -68,6 +164,12 @@ class GraphIllustrator(object):
 		"""
 		cv.imshow("Graph", self.current_canvas)
 		cv.waitKey(0)
+# ---------------------------------------------------------------------------- #
+	def setDataPointGenerator(self, dpg:DataPointGenerator) -> None:
+		"""
+		Replaces the illustrator's `DataPointGenerator`.
+		"""
+		self.__dpg = dpg
 # ---------------------------------------------------------------------------- #
 	# color is in BGR
 	def __drawDp(self, dp:DataPoint) -> None:
@@ -142,6 +244,7 @@ class GraphIllustrator(object):
 		This prevents gaps from a function changing in y value too much and
 		gives room for the points' `Δx` to be larger.
 		"""
+		#! [TEXTBOOK] Drawing (lines)
 		if ((self.__linepos1 != None) and (self.__linepos2 != None)):
 			cv.line(
 				self.current_canvas, self.__linepos1, self.__linepos2, 
@@ -154,7 +257,7 @@ class GraphIllustrator(object):
 		"""
 		cv.circle(self.current_canvas, [x,y], thickness, color, -1)
 # ---------------------------------------------------------------------------- #
-	def drawAxes(self, thickness:float=DEFAULT_THICKNESS, 
+	def drawAxes(self, thickness:float=__DEFAULT_THICKNESS, 
 		color:tuple[float, float, float]=(255,255,255)) -> None:
 		"""
 		Draws out `x` and `y` axes based on what the bounds are set to.
@@ -200,11 +303,12 @@ class GraphIllustrator(object):
 				color, thickness)
 
 		# draw y ticks
-		for y_i in range(self.__getViewingOffsetY(), sp.ceiling(__y_range)):
+		for y_i in np.arange(self.__getViewingOffsetY(), sp.ceiling(__y_range)):
+			__vert_position = int(y_i*__tick_height)
 			cv.line(
 				self.current_canvas,
-				(center_x-TICK_SPAN, y_i*__tick_height),
-				(center_x+TICK_SPAN, y_i*__tick_height),
+				(center_x-TICK_SPAN, __vert_position),
+				(center_x+TICK_SPAN, __vert_position),
 				color, thickness)
 
 # ---------------------------------------------------------------------------- #
@@ -230,13 +334,51 @@ class GraphIllustrator(object):
 		__y_min_difference = __y_after_most-__max_y
 		return __y_min_difference
 # ---------------------------------------------------------------------------- #
-	def applySmoothing(self, magnitude:int) -> None:
-		"""
-		Applies the standard OpenCV blur to the image.
-		`magnitude`: The intensity of the blur to apply.
-		"""
-		self.current_canvas = cv.blur(self.current_canvas, [magnitude,magnitude])
+	# def cropToFunction(self):
+	# 	"""
+	# 	Uses contour detection to crop the graph image to bound only the
+	# 	function.
+	# 	"""
+	# 	# grayscale
+	# 	__grayscale_graph = cv.cvtColor(self.current_canvas, cv.COLOR_BGR2GRAY)
+	# 	# remove axes
+	# 	[T, __grayscale_graph] = \
+	# 		cv.threshold(__grayscale_graph, 255, 255, cv.THRESH_BINARY)
 
+	# 	cv.imshow("Gray", __grayscale_graph)
+
+	# 	# grab contours
+	# 	[contours, _] = cv.findContours(
+	# 		__grayscale_graph,
+	# 		cv.RETR_EXTERNAL,
+	# 		cv.CHAIN_APPROX_SIMPLE
+	# 	)
+
+	# 	# initial min and max contour values: make them the lowest respectively
+	# 	__min_x = self.__len_x
+	# 	__min_y = self.__len_y # these are usually maximum values;
+	# 						   # these will be quickly reduced from the
+	# 						   # contours' mins
+	# 	__max_x = 0
+	# 	__max_y = 0 # opposite procedure from above
+
+	# 	# collect/update max and min values for contours
+	# 	cv.drawContours(self.current_canvas, contours, -1, [0, 255, 0], 2)
+	# 	cv.imshow("conts", self.current_canvas)
+	# 	cv.waitKey(0)
+
+	# 	for (i, contour) in enumerate(contours):
+	# 		(__x, __y, __w, __h) = cv.boundingRect(contour)
+	# 		__min_x = min(__x, __min_x)
+	# 		__min_y = min(__y, __min_y)
+	# 		__max_x = max(__x+__w, __max_x)
+	# 		__max_y = max(__y+__h, __max_y)
+
+	# 	# crop to bounding region
+	# 	self.current_canvas = self.current_canvas[
+	# 		__min_x:__max_x,
+	# 		__min_y:__max_y
+	# 	]
 # ---------------------------------------------------------------------------- #
 	def __dpToPixel(self, dp:DataPoint) -> tuple[float,float]:
 		"""
@@ -248,8 +390,8 @@ class GraphIllustrator(object):
 		)
 # ---------------------------------------------------------------------------- #
 	def __fixCanvasSizes(self, size_x:int, size_y:int, 
-		default_x:int=DEFAULT_CANVAS_SIZE_X, 
-		default_y:int=DEFAULT_CANVAS_SIZE_Y) -> None:
+		default_x:int=__DEFAULT_CANVAS_SIZE_X, 
+		default_y:int=__DEFAULT_CANVAS_SIZE_Y) -> None:
 		"""
 		`INTERNAL FUNCTION:` Ensures that the canvas sizes were entered properly.\n
 		Do not use!
@@ -260,6 +402,16 @@ class GraphIllustrator(object):
 			self.current_canvas = np.zeros((default_y, default_x, 3), dtype="uint8")
 		else:
 			self.current_canvas = np.zeros((size_y, size_x, 3), dtype="uint8")
+# ---------------------------------------------------------------------------- #
+	def clearCanvas(self) -> None:
+		"""
+		Clears the canvas.
+		"""
+		self.current_canvas = \
+		np.zeros(
+			(self.__len_y, self.__len_x, 3), 
+			dtype="uint8"
+		)
 # ---------------------------------------------------------------------------- #
 	# def __fixPixPerInt(self, pix_per_int:int, default:int=DEFAULT_PIX_PER_INT) -> None:
 	# 	if pix_per_int <= 0:
@@ -300,17 +452,42 @@ if __name__ == "__main__":
 	color = getArgumentColorOrDefault()
 	thickness = getArgumentThicknessOrDefault()
 
+# --------------------------- Construct Main Graph --------------------------- #
 	eq = Equation(parser_type=ParsingTypes.LATEX)
 	# eq.askParser()
+	print("-------------------------------------------------------")
+
+	print("\033[92;1mMain equation:\033[0m")
 	eq.askEquation()
-	# eq.askEquation()
-
-	dpg = DataPointGenerator(eq, x_min=-5, x_max=5, y_min=-2, y_max=5)
-	# dpg = DataPointGenerator(eq, x_min=args["xmin"], x_max=args["xmax"], y_min=args["ymin"], y_max=args["ymax"], dx=0.1)
+	print("-------------------------------------------------------")
+	dpg = DataPointGenerator(eq, x_min=-10, x_max=10, y_min=-5, y_max=5)
 	dpg.generateDataPoints()
-
+	print("-------------------------------------------------------")
 	illustrator = GraphIllustrator(2560, 1440, dpg, color, thickness)
 	illustrator.drawAxes()
-	illustrator.plotDataPoints()
-	# illustrator.applySmoothing(3)
-	illustrator.showGraph()
+	illustrator.drawGraph()
+	print("-------------------------------------------------------")
+	
+# ------------------- Mask the main graph from an equation ------------------- #
+	# # MASKING TEST
+	# eq2 = Equation(parser_type=ParsingTypes.LATEX)
+	# print("-------------------------------------------------------")
+	# print("\033[1mMask equation:\033[0m")
+	# eq2.askEquation()
+	# print("-------------------------------------------------------")
+	# masked = illustrator.maskedWithEquation(eq2)
+	
+	# cv.imshow("Masked", masked)
+	# cv.waitKey(0)
+# ------------------------- Smoothing, Histogram, Etc ------------------------ #
+	# Graph image manipulation
+	gimg = GraphImage(illustrator.getGraphImage())
+	gimg.applySmoothing(3)
+	gimg.showGraph()
+	# gimg.showGraphHist()
+	# print("-------------------------------------------------------")
+
+	cv.waitKey(0)
+	system("cls||clear")
+# -------------------------------- Save Image -------------------------------- #
+	gimg.saveGraph("saved_graph.jpg")

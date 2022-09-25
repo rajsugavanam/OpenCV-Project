@@ -1,5 +1,4 @@
 import sys
-from turtle import numinput
 sys.path.append("../../")
 
 from typing import Callable
@@ -8,8 +7,7 @@ from sympy.parsing.mathematica import parse_mathematica
 from sympy.parsing.latex import parse_latex
 from sympy.parsing.sympy_parser import T
 from sympy.abc import x
-from sympy import im
-from sympy.calculus.util import continuous_domain
+from sympy import im, E
 from opencv_project.math.ParsingTypes import ParsingTypes
 
 class Equation(object):
@@ -17,6 +15,10 @@ class Equation(object):
 	Interfaces with the user to input an equation and parser.
 	Holds a single function `f(x)` for evaluation.
 	"""
+	CONSTANTS = {
+		"e": sp.E,
+		"pi": sp.pi
+	}
 # ---------------------------------------------------------------------------- #
 	def __init__(self, parser_type:ParsingTypes=None) -> None:
 		self.__parser_type:ParsingTypes = parser_type
@@ -74,7 +76,7 @@ class Equation(object):
 			return None
 		else:
 			try:
-				evaluated = self.__derivative.evalf(6, subs={x:numInput})
+				evaluated = self.__derivative.subs(x, numInput)
 				real = self.__removeImaginaryComp(evaluated)
 				if (real != None):
 					return real
@@ -114,9 +116,13 @@ class Equation(object):
 
 		else:
 			while True:
-				inputEq = input(
-					"\nEnter your equation. You have the {} parser type selected.\nf(x)="
+				print(
+					"\033[4mEnter your equation."
+					+" You have the {} parser type selected.\033[0m"
 					.format(self.__parser_type.name)
+				)
+				inputEq = input(
+					"f(x)="
 				)
 
 				if self.__parser_type == ParsingTypes.MATHEMATICA:
@@ -130,20 +136,40 @@ class Equation(object):
 					)
 
 				self.__equation = self.__equation.doit()
-				print("Parsed Equation:", self.__equation)
+
 				# only allowed variable will be `x`, so that's the variable
 				# the derivative is respect to
-				self.__derivative = sp.diff(self.__equation, x, evaluate=True)
+				self.__derivative = sp.diff(
+					self.__equation, sp.symbols("x", real=True)
+				).doit()
 
-
+				self.__replaceEqAndDerivConstants()
 				if self.__verifyFunctionVars():
 					# function is now verified
+					print("Parsed Equation:", self.__equation)
 					break
 
 				# at this point the user will have entered an invalid function
 				print(
 					"\nPlease write a function that simplifies to one that only contains the variable x."
 				)
+# ---------------------------------------------------------------------------- #
+	def __replaceEqAndDerivConstants(self) -> None:
+		"""
+		Replaces constants for the stored equation and its derivative.
+		"""
+		self.__equation = self.__replaceConstants(self.__equation)
+		self.__derivative = self.__replaceConstants(self.__derivative)
+# ---------------------------------------------------------------------------- #
+	def __replaceConstants(self, func):
+		"""
+		Replaces the equation constants defined under this class.
+		"""
+		for symbol in Equation.CONSTANTS:
+			value = Equation.CONSTANTS[symbol]
+			func = func.subs(symbol, value)
+
+		return func
 # ---------------------------------------------------------------------------- #
 	# Verifies the variables of a function.
 	# Returns: False if there is a variable other than x.
@@ -154,9 +180,9 @@ class Equation(object):
 		Returns: `True` if the function's only variable is x.
 		"""
 		for var in self.__equation.free_symbols:
-			if var != x: # x is from sympy.abc
+			if str(var) != "x": # x is from sympy.abc
 				return False
-		
+
 		return True
 # ---------------------------------------------------------------------------- #
 	def askParser(self) -> None:

@@ -18,12 +18,12 @@ class fast_math(object):
 	def fast_atan(input:float) -> float:
 		"""
 		Uses a transformed hyperbolic tangent function to approximate `arctan(x)`.
+		Works for all real `x` values.
 		"""
-		#! this function isn't actually faster than arctan(x) yet. do not use this!
 		# I use tangent because arctangent isn't convergent
 		# __approximated_tan = sp.series(sp.tan(x), x, 0, 5)
-		__output = fast_math.__fast_arctan.subs(x, input)
-		return __output
+		__evaluated = fast_math.__fast_arctan.subs(x, input)
+		return __evaluated
 	# ---------------------------------------------------------------------------- #
 	@staticmethod
 	def fast_cos(input:float) -> float:
@@ -41,5 +41,5 @@ class fast_math(object):
 		Uses its power series expansion with fewer terms to
 		approximate `sin(x)`. Only effective for the domain -pi/2 to pi/2.
 		"""
-		__evaluated =fast_math.__sin_series.subs(x, input)
+		__evaluated = fast_math.__sin_series.subs(x, input)
 		return __evaluated
