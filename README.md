@@ -1,4 +1,4 @@
-# AdvHon-Comp-Sci
+# OpenCV-Project
 repository for my AH Comp Sci class
 
 
