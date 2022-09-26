@@ -438,8 +438,11 @@ if __name__ == "__main__":
 	# ap.add_argument("--ymax", required=True, help="The maximum y for the viewing plane.")
 	args = vars(ap.parse_args())
 
-	color = getArgumentColorOrDefault()
-	thickness = getArgumentThicknessOrDefault()
+	# bad inputs are now able to crash "GraphIllustrator.py" when ran.
+	# However, there is a main "GraphingCalculator" class that this main's
+	# functionalities were transfered over to.
+	color = args["color"]
+	thickness = args["thickness"]
 
 # --------------------------- Construct Main Graph --------------------------- #
 	eq = Equation(parser_type=ParsingTypes.LATEX)
