@@ -3,11 +3,11 @@
 python GraphingCalculator.py \
 -w 2560 \
 -l 1440 \
--c "#ffff00" \
+-c "#ff00ff" \
 -t 10 \
 \
---xmin -10 \
---xmax 10 \
+--xmin -20 \
+--xmax 20 \
 --ymin -10 \
 --ymax 10
 

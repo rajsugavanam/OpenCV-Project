@@ -309,32 +309,6 @@ class GraphIllustrator(object):
 				(center_x+TICK_SPAN, __vert_position),
 				color, thickness)
 # ---------------------------------------------------------------------------- #
-	def showLatexFunction(self):
-		#! Overlaying Images
-		#! [TEXTBOOK] Resizing, Thresholding
-		latex_image = cv.imread("function.png")
-		[_, latex_image] = \
-			cv.threshold(latex_image, 155, 255, cv.THRESH_BINARY_INV)
-
-		len_x = latex_image.shape[1]
-		len_y = latex_image.shape[0]
-
-		resize_factor = sp.sqrt(self.__len_x*self.__len_y)/2000
-		latex_image = \
-			cv.resize(
-				latex_image, 
-				(int(len_x*resize_factor),
-				int(len_y*resize_factor)),
-				interpolation=cv.INTER_AREA
-			)
-
-		len_x = latex_image.shape[1]
-		len_y = latex_image.shape[0]
-		OFFSET = 20
-
-		self.current_canvas \
-			[OFFSET:len_y+OFFSET, OFFSET:len_x+OFFSET] = latex_image
-# ---------------------------------------------------------------------------- #
 	def __getViewingOffsetX(self) -> float:
 		"""
 		Gets the difference between the minimum `x` value and its floor.

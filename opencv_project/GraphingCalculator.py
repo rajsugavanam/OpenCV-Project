@@ -134,9 +134,9 @@ class GraphingCalculator(object):
 			self.color,
 			self.thickness
 		)
+
 		self.illustrator.drawAxes()
 		self.illustrator.drawGraph()
-		self.illustrator.showLatexFunction()
 
 		print(GraphingCalculator.DIVIDER_LINE)
 # ---------------------------------------------------------------------------- #
@@ -147,6 +147,7 @@ class GraphingCalculator(object):
 		"""
 		# Graph image manipulation
 		gimg = GraphImage(self.illustrator.getGraphImage())
+		gimg.showLatexFunction()
 		gimg.applySmoothing(3)
 		gimg.showGraph()
 
@@ -168,6 +169,6 @@ if __name__ == "__main__":
 	print(GraphingCalculator.DIVIDER_LINE)
 
 	if program.yesNoPrompt("Would you like to save your incredible graph?"):
-		gimg.saveGraph("saved_graph.jpg")
+		gimg.saveGraph("example_graph_3.jpg")
 	
 	cv.waitKey(0)

@@ -39,8 +39,10 @@ class Equation(object):
 		"""
 		return self.__equation != None
 # ---------------------------------------------------------------------------- #
-	def __generateEquationImage(self, unsimplified_equation):
-		# make sure the parsing type is latex.. just to be safe
+	def __generateEquationImage(self, unsimplified_equation) -> None:
+		"""
+		Generate a LaTeX image of the given equation and save it as `function.png`.
+		"""
 		sp.preview(
 			unsimplified_equation,
 			viewer="file",
@@ -68,7 +70,7 @@ class Equation(object):
 			return None
 		else:
 			try:
-				evaluated = self.__equation.subs(x, numInput)
+				evaluated = self.__equation.subs(x, numInput).doit().evalf()
 				real = self.__removeImaginaryComp(evaluated)
 				if (real != None):
 					return real
@@ -91,7 +93,7 @@ class Equation(object):
 			return None
 		else:
 			try:
-				evaluated = self.__derivative.subs(x, numInput)
+				evaluated = self.__derivative.subs(x, numInput).doit().evalf()
 				real = self.__removeImaginaryComp(evaluated)
 				if (real != None):
 					return real

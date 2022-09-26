@@ -100,3 +100,38 @@ class GraphImage(object):
 		#! [TEXTBOOK] Smoothing/Blurring
 		self.graph_image = cv.blur(self.graph_image, [magnitude,magnitude])
 # ---------------------------------------------------------------------------- #
+	def showLatexFunction(self) -> None:
+		"""
+		Shows LaTeX text from an image on a graph. This should be the entered
+		equation.
+		"""
+		#! Overlaying Images
+		#! [TEXTBOOK] Resizing, Thresholding
+		graph_x = self.graph_image.shape[1]
+		graph_y = self.graph_image.shape[0]
+
+		latex_image = cv.imread("function.png")
+		
+		# invert image colors
+		[_, latex_image] = \
+			cv.threshold(latex_image, 155, 255, cv.THRESH_BINARY_INV)
+
+		len_x = latex_image.shape[1]
+		len_y = latex_image.shape[0]
+
+		resize_factor = sp.sqrt(graph_x*graph_y)/2000
+		latex_image = \
+			cv.resize(
+				latex_image, 
+				(int(len_x*resize_factor),
+				int(len_y*resize_factor)),
+				interpolation=cv.INTER_AREA
+			)
+
+		len_x = latex_image.shape[1]
+		len_y = latex_image.shape[0]
+		OFFSET = 20
+
+		self.graph_image \
+			[OFFSET:len_y+OFFSET, OFFSET:len_x+OFFSET] = latex_image
+# ---------------------------------------------------------------------------- #

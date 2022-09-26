@@ -362,7 +362,7 @@ class DataPointGenerator(object):
 			return np.float32(self.__default_dx)
 # ---------------------------------------------------------------------------- #
 	def checkDerivative(self, dp1:DataPoint, dp2:DataPoint,
-		derivative_forgiveness:float=300) -> bool:
+		derivative_forgiveness:float=100) -> bool:
 		"""
 		Checks whether `f(x)`'s derivative at `dp1` is close enough to the slope
 		between `dp1` and `dp2`.
@@ -374,7 +374,8 @@ class DataPointGenerator(object):
 		# __evaluated_deriv can sometimes be None if a function isn't
 		# differentiable
 		if __evaluated_deriv != None and \
-			pow(__actual_slope-__evaluated_deriv, 2) < derivative_forgiveness:
+			pow(__actual_slope-__evaluated_deriv, 3) \
+				< pow(derivative_forgiveness,3):
 			return True
 		else:
 			return False
