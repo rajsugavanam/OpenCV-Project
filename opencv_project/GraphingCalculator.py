@@ -61,6 +61,16 @@ class GraphingCalculator(object):
 			help="An integer representing the pixel width of the graph.")
 		ap.add_argument("--length", "-l", required=True, 
 			help="An integer representing the pixel length of the graph.")
+
+		ap.add_argument("--xmin", required=True, 
+			help="The lowest visible x of the graph.")
+		ap.add_argument("--xmax", required=True, 
+			help="The highest visible x of the graph.")
+		ap.add_argument("--ymin", required=True, 
+			help="The lowest visible y of the graph.")
+		ap.add_argument("--ymax", required=True, 
+			help="The highest visible y of the graph.")
+
 		args = vars(ap.parse_args())
 
 		return args
@@ -98,7 +108,7 @@ class GraphingCalculator(object):
 		Starts the main equation drawing sequence of this program.
 		"""
 		eq = Equation(parser_type=ParsingTypes.LATEX)
-		
+
 		print(GraphingCalculator.DIVIDER_LINE)
 
 		print("\033[92;1mMain equation:\033[0m")
@@ -106,7 +116,14 @@ class GraphingCalculator(object):
 
 		print(GraphingCalculator.DIVIDER_LINE)
 
-		dpg = DataPointGenerator(eq, x_min=-10, x_max=10, y_min=-5, y_max=5)
+		dpg = DataPointGenerator(
+			eq,
+			x_min=int(self.program_args["xmin"]),
+			x_max=int(self.program_args["xmax"]),
+			y_min=int(self.program_args["ymin"]),
+			y_max=int(self.program_args["ymax"])
+		)
+
 		dpg.generateDataPoints()
 
 

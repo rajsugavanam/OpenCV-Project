@@ -4,4 +4,9 @@ python GraphingCalculator.py \
 -w 2560 \
 -l 1440 \
 -c "#ff00ff" \
--t 10
+-t 10 \
+\
+--xmin -10 \
+--xmax 10 \
+--ymin -10 \
+--ymax 10
