@@ -136,6 +136,7 @@ class GraphingCalculator(object):
 		)
 		self.illustrator.drawAxes()
 		self.illustrator.drawGraph()
+		self.illustrator.showLatexFunction()
 
 		print(GraphingCalculator.DIVIDER_LINE)
 # ---------------------------------------------------------------------------- #

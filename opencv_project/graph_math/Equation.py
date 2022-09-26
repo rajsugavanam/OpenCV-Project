@@ -24,6 +24,8 @@ class Equation(object):
 		self.__parser_type:ParsingTypes = parser_type
 		self.__equation = None
 		self.__derivative = None
+
+		self.__latex_image = None
 # ---------------------------------------------------------------------------- #
 	def getStoredFunction(self) -> Callable[[float], float]:
 		"""
@@ -36,6 +38,19 @@ class Equation(object):
 		Whether there is a stored function, `f(x)`.
 		"""
 		return self.__equation != None
+# ---------------------------------------------------------------------------- #
+	def __generateEquationImage(self, unsimplified_equation):
+		# make sure the parsing type is latex.. just to be safe
+		sp.preview(
+			unsimplified_equation,
+			viewer="file",
+			filename="function.png",
+			dvioptions=["-D", "600"],
+			preamble=\
+				"\\documentclass[14pt]{standalone}\n"
+				+"\\usepackage{lmodern}\n"
+				+"\\begin{document}\n"
+		)
 # ---------------------------------------------------------------------------- #
 	def getParser(self) -> ParsingTypes:
 		"""
@@ -125,14 +140,18 @@ class Equation(object):
 					"f(x)="
 				)
 
+				# for equation displaying
+				unsimplified_parsed = None
 				if self.__parser_type == ParsingTypes.MATHEMATICA:
+					unsimplified_parsed = parse_mathematica(inputEq)
 					self.__equation = sp.simplify(
-						parse_mathematica(inputEq)
+						unsimplified_parsed
 					)
 
 				elif self.__parser_type == ParsingTypes.LATEX:
+					unsimplified_parsed = parse_latex(inputEq)
 					self.__equation = sp.simplify(
-						parse_latex(inputEq)
+						unsimplified_parsed
 					)
 
 				self.__equation = self.__equation.doit()
@@ -144,10 +163,11 @@ class Equation(object):
 				self.__derivative = sp.diff(
 					self.__equation, x
 				).doit()
-				print(self.__derivative)
 
 				self.__replaceEqAndDerivConstants()
 				if self.__verifyFunctionVars():
+					# generate the image of what the user typed
+					self.__generateEquationImage(unsimplified_parsed)
 					# function is now verified
 					print("Parsed Equation:", self.__equation)
 					break
