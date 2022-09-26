@@ -65,22 +65,7 @@ class GraphingCalculator(object):
 
 		return args
 # ---------------------------------------------------------------------------- #
-	def shouldMaskGraph(self) -> bool:
-		"""
-		Ask the user whether they would like to mask the graph image with another.
-		"""
-		return self.__yesNoPrompt(
-			"Would you like to enter a"
-			+" masking equation?"
-		)
-# ---------------------------------------------------------------------------- #
-	def __shouldCalculateHist(self) -> bool:
-		"""
-		Ask the user whether they would like to calculate a histogram.
-		"""
-		return self.__yesNoPrompt("Would you like to generate a histogram?")
-# ---------------------------------------------------------------------------- #
-	def __yesNoPrompt(self, string_prompt) -> bool:
+	def yesNoPrompt(self, string_prompt) -> bool:
 		"""
 		A simple yes/no prompt for the user with the given on-screen prompt.
 		Returns whether they selected yes or no.
@@ -101,29 +86,28 @@ class GraphingCalculator(object):
 	def askForGraphMask(self) -> None:
 		eq2 = Equation(parser_type=ParsingTypes.LATEX)
 		print(GraphingCalculator.DIVIDER_LINE)
-		print("\033[1mMask equation:\033[0m")
+		print("\033[92;1mMask equation:\033[0m")
 		eq2.askEquation()
 		print(GraphingCalculator.DIVIDER_LINE)
 		masked = self.illustrator.maskedWithEquation(eq2)
-		
+		print(GraphingCalculator.DIVIDER_LINE)
 		cv.imshow("Masked", masked)
-		cv.waitKey(0)
 # ---------------------------------------------------------------------------- #
-	def mainEquation(self) -> None:
+	def mainGraph(self) -> None:
 		"""
 		Starts the main equation drawing sequence of this program.
 		"""
 		eq = Equation(parser_type=ParsingTypes.LATEX)
-		# eq.askParser()
+		
 		print(GraphingCalculator.DIVIDER_LINE)
 
 		print("\033[92;1mMain equation:\033[0m")
 		eq.askEquation()
-		print(GraphingCalculator.DIVIDER_LINE)
-		dpg = DataPointGenerator(eq, x_min=-10, x_max=10, y_min=-5, y_max=5)
-		dpg.generateDataPoints()
 
 		print(GraphingCalculator.DIVIDER_LINE)
+
+		dpg = DataPointGenerator(eq, x_min=-10, x_max=10, y_min=-5, y_max=5)
+		dpg.generateDataPoints()
 
 
 		self.illustrator = GraphIllustrator(
@@ -138,31 +122,34 @@ class GraphingCalculator(object):
 
 		print(GraphingCalculator.DIVIDER_LINE)
 # ---------------------------------------------------------------------------- #
-	def graphImageManipulation(self) -> None:
+	def graphImageSequence(self) -> None:
 		"""
-		Starts the Graph Image Manipulation sequence of this program.
+		Starts the Graph Image sequence of this program.
+		Returns the `GraphImage` object for final use.
 		"""
 		# Graph image manipulation
 		gimg = GraphImage(self.illustrator.getGraphImage())
 		gimg.applySmoothing(3)
 		gimg.showGraph()
 
-		# HISTOGRAM
-		if program.__shouldCalculateHist():
-			gimg.showGraphHist()
-
-		print(GraphingCalculator.DIVIDER_LINE)
-
-		cv.waitKey(0)
-		system("cls||clear")
+		return gimg
 # ---------------------------------------------------------------------------- #
 if __name__ == "__main__":
 
 	program = GraphingCalculator()
 
-	program.mainEquation()
+	program.mainGraph()
 	
-	if program.shouldMaskGraph():
+	if program.yesNoPrompt("Would you like to enter a masking equation?"):
 		program.askForGraphMask()
 
-	program.graphImageManipulation()
+	gimg = program.graphImageSequence()
+
+	if program.yesNoPrompt("Would you like to generate a histogram?"):
+		gimg.showGraphHist()
+	print(GraphingCalculator.DIVIDER_LINE)
+
+	if program.yesNoPrompt("Would you like to save your incredible graph?"):
+		gimg.saveGraph("saved_graph.jpg")
+	
+	cv.waitKey(0)
