@@ -1,10 +1,4 @@
 # OpenCV-Project
-repository for my AH Comp Sci class
-
-
-<h1>Sections</h1>
-
-
 
 <h2><code>textbook</code></h2>
 <p>
