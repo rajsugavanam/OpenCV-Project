@@ -3,10 +3,20 @@
 python GraphingCalculator.py \
 -w 2560 \
 -l 1440 \
--c "#ff00ff" \
+-c "#ffff00" \
 -t 10 \
 \
 --xmin -10 \
 --xmax 10 \
 --ymin -10 \
 --ymax 10
+
+# Quick-Copy Colors
+# RED: #ff0000
+# GREEN: #00ff00
+# BLUE: #0000ff
+#
+# ORANGE: #ffa500
+# CYAN: #00ffff
+# YELLOW: #ffff00
+# MAGENTA: #ff00ff
