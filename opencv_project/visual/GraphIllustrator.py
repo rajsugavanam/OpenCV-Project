@@ -311,8 +311,11 @@ class GraphIllustrator(object):
 # ---------------------------------------------------------------------------- #
 	def showLatexFunction(self):
 		#! Overlaying Images
-		#! [TEXTBOOK] Resizing
+		#! [TEXTBOOK] Resizing, Thresholding
 		latex_image = cv.imread("function.png")
+		[_, latex_image] = \
+			cv.threshold(latex_image, 155, 255, cv.THRESH_BINARY_INV)
+
 		len_x = latex_image.shape[1]
 		len_y = latex_image.shape[0]
 
