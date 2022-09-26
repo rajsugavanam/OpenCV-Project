@@ -13,10 +13,10 @@ from sympy.calculus.util import diff
 
 from sympy.abc import x
 
-from opencv_project.math.Equation import Equation
-from opencv_project.math.FastMath import fast_math
-from opencv_project.math.DataPoint import DataPoint
-from opencv_project.math.DataPointList import DataPointList
+from graph_math.Equation import Equation
+from graph_math.FastMath import fast_math
+from graph_math.DataPoint import DataPoint
+from graph_math.DataPointList import DataPointList
 
 class DataPointGenerator(object):
 	"""

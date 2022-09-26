@@ -4,7 +4,7 @@ sys.path.append("../../")
 from typing import Callable
 from tqdm import tqdm
 
-from opencv_project.math.DataPoint import DataPoint
+from graph_math.DataPoint import DataPoint
 
 class DataPointList(object):
 	"""

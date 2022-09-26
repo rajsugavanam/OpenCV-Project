@@ -1,7 +1,7 @@
 import sys
 sys.path.append("../../")
 
-from opencv_project.math.Equation import Equation
+from graph_math.Equation import Equation
 
 import cv2 as cv
 import numpy as np

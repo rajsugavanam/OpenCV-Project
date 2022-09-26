@@ -1,17 +1,17 @@
 from os import system
-import sys
 
+import sys
 sys.path.append("../../")
 
 import cv2 as cv
 import numpy as np
 import sympy as sp
 
-from opencv_project.math.ParsingTypes import ParsingTypes
-from opencv_project.math.Equation import Equation
-from opencv_project.math.DataPoint import DataPoint
-from opencv_project.math.DataPointGenerator import DataPointGenerator
-from opencv_project.visual.GraphImage import GraphImage
+from graph_math.ParsingTypes import ParsingTypes
+from graph_math.Equation import Equation
+from graph_math.DataPoint import DataPoint
+from graph_math.DataPointGenerator import DataPointGenerator
+from visual.GraphImage import GraphImage
 
 import argparse
 from tqdm import tqdm
@@ -334,6 +334,9 @@ class GraphIllustrator(object):
 		__y_min_difference = __y_after_most-__max_y
 		return __y_min_difference
 # ---------------------------------------------------------------------------- #
+	"""
+	Unused due to problems with the axes counting as contours!
+	"""
 	# def cropToFunction(self):
 	# 	"""
 	# 	Uses contour detection to crop the graph image to bound only the
@@ -422,20 +425,6 @@ class GraphIllustrator(object):
 	# 		self.pix_per_int:int = pix_per_int
 
 
-def getArgumentColorOrDefault():
-	if (args["color"] != None):
-		rgb = matplotlib.colors.to_rgb(args["color"])
-		return (rgb[2]*255, rgb[1]*255, rgb[0]*255)
-	else:
-		color = (0,255,0)
-
-def getArgumentThicknessOrDefault():
-	if (args["thickness"] != None):
-		return args["thickness"]
-	else:
-		return 4
-
-
 if __name__ == "__main__":
 
 	ap = argparse.ArgumentParser()
@@ -469,16 +458,16 @@ if __name__ == "__main__":
 	print("-------------------------------------------------------")
 	
 # ------------------- Mask the main graph from an equation ------------------- #
-	# # MASKING TEST
-	# eq2 = Equation(parser_type=ParsingTypes.LATEX)
-	# print("-------------------------------------------------------")
-	# print("\033[1mMask equation:\033[0m")
-	# eq2.askEquation()
-	# print("-------------------------------------------------------")
-	# masked = illustrator.maskedWithEquation(eq2)
+	# MASKING TEST
+	eq2 = Equation(parser_type=ParsingTypes.LATEX)
+	print("-------------------------------------------------------")
+	print("\033[1mMask equation:\033[0m")
+	eq2.askEquation()
+	print("-------------------------------------------------------")
+	masked = illustrator.maskedWithEquation(eq2)
 	
-	# cv.imshow("Masked", masked)
-	# cv.waitKey(0)
+	cv.imshow("Masked", masked)
+	cv.waitKey(0)
 # ------------------------- Smoothing, Histogram, Etc ------------------------ #
 	# Graph image manipulation
 	gimg = GraphImage(illustrator.getGraphImage())

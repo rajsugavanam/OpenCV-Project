@@ -8,7 +8,7 @@ from sympy.parsing.latex import parse_latex
 from sympy.parsing.sympy_parser import T
 from sympy.abc import x
 from sympy import im, E
-from opencv_project.math.ParsingTypes import ParsingTypes
+from graph_math.ParsingTypes import ParsingTypes
 
 class Equation(object):
 	"""
@@ -138,7 +138,9 @@ class Equation(object):
 				self.__equation = self.__equation.doit()
 
 				# only allowed variable will be `x`, so that's the variable
-				# the derivative is respect to
+				# the derivative is respect to.
+				# real=True is used here because |x|'s derivative has problems
+				# when the function is in an imaginary domain as well.
 				self.__derivative = sp.diff(
 					self.__equation, sp.symbols("x", real=True)
 				).doit()
