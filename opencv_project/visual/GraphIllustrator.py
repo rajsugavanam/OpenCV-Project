@@ -59,8 +59,6 @@ class GraphIllustrator(object):
 		"""
 		#! [TEXTBOOK] Masking
 		eq_masker = self.__equationMasker(equation)
-
-		print("Preparing mask equation...")
 		eq_masker.__getDataPointGenerator().generateDataPoints()
 		eq_masker.drawGraph()
 

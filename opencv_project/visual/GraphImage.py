@@ -88,6 +88,9 @@ class GraphImage(object):
 		to disk in a folder relative to this file.
 		"""
 		cv.imwrite(file_name, self.graph_image)
+		print("Your graph has been saved as {}!"
+			.format(file_name)
+		)
 # ---------------------------------------------------------------------------- #
 	def applySmoothing(self, magnitude:int) -> None:
 		"""
