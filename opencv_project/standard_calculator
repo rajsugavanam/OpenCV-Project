@@ -1,0 +1,7 @@
+# I mean, seriously, I'm sick of having to re-enter this command over and over
+# again.
+python GraphingCalculator.py \
+-w 2560 \
+-l 1440 \
+-c "#ff00ff" \
+-t 10
