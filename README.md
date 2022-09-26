@@ -14,7 +14,5 @@ This folder contains all my python files from the textbook, <br>
 
 <h2><code>opencv_project</code></h2>
 <p>
-This folder contains the project files for my opencv project, a graphing calculator.
+This folder contains the project files for the opencv project, a graphing calculator.
 </p>
-
-More to come soon!
