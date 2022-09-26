@@ -63,9 +63,9 @@ class GraphImage(object):
 
 						# convert (255,255,255) to (1.0, 1.0, 1.0)
 						__face_colors = \
-							(x / 255,
+							(z / 255,
 							y / 255,
-							z / 255)
+							x / 255)
 
 						# plot the color as vector/point with dot size as
 						# frequency

@@ -273,7 +273,7 @@ class DataPointGenerator(object):
 		else:
 			return self.__gen_min_y<=y_value<=self.__gen_max_y
 # ---------------------------------------------------------------------------- #
-	def __canAddDp(self, current_y:float, forgiveness:float=500) -> bool:
+	def __canAddDp(self, current_y:float, forgiveness:float=50) -> bool:
 		"""
 		Determines whether the generator should generate another point in
 		sequence of the last, given their y values.
@@ -283,12 +283,9 @@ class DataPointGenerator(object):
 
 		# if the point isn't too far from the max y
 		__can_add = self.getMinY() - current_y <= forgiveness \
-			or current_y - self.getMaxY() <= forgiveness
+			or self.getMaxY() - current_y >= forgiveness
 
-		if (__can_add):
-			return True
-		else:
-			return False
+		return __can_add
 
 # ---------------------------------------------------------------------------- #
 	def generateDataPoints(self, override:bool=False) -> None:
@@ -309,9 +306,6 @@ class DataPointGenerator(object):
 		y_prev = None
 		x_i = self.__gen_min_x
 		while (__prog_bar):
-			# change dx based on how steep the derivative is at the given point.
-			# this would make graphs like cot(x)/4 look better.
-			
 			# if override is on, just generate the point with disregard to existence			
 			if (self.__data_points.getPointAtX(x_i) == None) or (override):
 				returned_yval = self.__equation.evaluateEquation(x_i)
@@ -322,6 +316,9 @@ class DataPointGenerator(object):
 						self.__addDataPoint(DataPoint(x_i, returned_yval))
 						# evaluate derivative if it would affect the visible graph
 						__derivative_value = self.getEquation().evaluateDerivative(x_i)
+						# change dx based on how steep the derivative 
+						# is at the given point.
+						# this would make graphs like cot(x)/4 look better.
 						__new_dx = self.__getNewDx(__derivative_value)
 				else:
 					y_prev = None
@@ -365,20 +362,19 @@ class DataPointGenerator(object):
 			return np.float32(self.__default_dx)
 # ---------------------------------------------------------------------------- #
 	def checkDerivative(self, dp1:DataPoint, dp2:DataPoint,
-		derivative_forgiveness:float=100) -> bool:
+		derivative_forgiveness:float=300) -> bool:
 		"""
 		Checks whether `f(x)`'s derivative at `dp1` is close enough to the slope
 		between `dp1` and `dp2`.
 		"""
 		__evaluated_deriv = self.getEquation().evaluateDerivative(dp1.getX())
-		__actual_slope = dp1.slopeWith(dp2)
-
+		__actual_slope = dp2.slopeWith(dp1)
 		# absolute value to see the distance between the slopes
 		# if the slope difference isn't above the forgiveness
 		# __evaluated_deriv can sometimes be None if a function isn't
 		# differentiable
 		if __evaluated_deriv != None and \
-			 pow(__actual_slope-__evaluated_deriv, 2) < derivative_forgiveness:
+			pow(__actual_slope-__evaluated_deriv, 2) < derivative_forgiveness:
 			return True
 		else:
 			return False

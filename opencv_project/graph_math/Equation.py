@@ -139,11 +139,12 @@ class Equation(object):
 
 				# only allowed variable will be `x`, so that's the variable
 				# the derivative is respect to.
-				# real=True is used here because |x|'s derivative has problems
-				# when the function is in an imaginary domain as well.
+				#! i guess sympy really hates taking the derivative of |x|.
+				#! you can probably just use sqrt(x^2) and call it a day.
 				self.__derivative = sp.diff(
-					self.__equation, sp.symbols("x", real=True)
+					self.__equation, x
 				).doit()
+				print(self.__derivative)
 
 				self.__replaceEqAndDerivConstants()
 				if self.__verifyFunctionVars():
